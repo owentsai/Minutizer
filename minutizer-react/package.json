@@ -16,9 +16,10 @@
     "typescript": "~3.7.2"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "serve -s build",
     "build": "react-scripts build",
     "test": "react-scripts test",
+    "local": "react-scripts start",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
