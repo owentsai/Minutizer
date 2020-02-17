@@ -2,6 +2,7 @@ import React from 'react';
 import logo from './logo.svg';
 import './App.css';
 import MetaFields from "./MetaFields";
+import AttendeesComponent from "./AttendeesComponent";
 
 const App = () => {
   return (
