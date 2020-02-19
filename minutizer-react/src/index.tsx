@@ -5,7 +5,7 @@ import App from './App';
 import MetaFields from './MetaFields';
 import * as serviceWorker from './serviceWorker';
 
-ReactDOM.render(<App />, document.getElementById('root'));
+ReactDOM.render(<MetaFields />, document.getElementById('root'));
 // ReactDOM.render(<MetaFields />, document.getElementById('root'));
 
 // If you want your app to work offline and load faster, you can change

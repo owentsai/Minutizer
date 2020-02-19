@@ -1,0 +1,21 @@
+
+.Meta-label {
+  display: block;
+  display: flex;
+  flex-direction: row;
+  text-align: left;
+  width: 400px;
+  line-height: 26px;
+  margin-bottom: 10px;
+  margin-top: 10px;
+}
+
+.Meta-input {
+  height: 20px;
+  flex: 0 0 200px;
+  margin-left: 10px;
+}
+.metaForm{
+  text-align: left;
+  margin-left: 10px;
+}

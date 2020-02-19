@@ -1,6 +1,7 @@
 import React from 'react';
 import logo from './logo.svg';
 import AttendeesComponent from "./AttendeesComponent";
+import './MetaFields.css';
 
 export default class NameForm extends React.Component<{}, {organizer: any, startTime: any, endTime: any}> {
     private fileInput = React.createRef<HTMLInputElement>();
@@ -46,20 +47,21 @@ export default class NameForm extends React.Component<{}, {organizer: any, start
 
     render() {
         return (
-            <form>
+            <form className = 'metaForm'>
                 <label className = "Meta-label">
                     Meeting Organizer:
-                    <input type="text" value={this.state.organizer} onChange={this.handleChangeOrganizer} />
+                    <input className = "Meta-input" type="text" value={this.state.organizer} onChange={this.handleChangeOrganizer} />
                 </label>
                 <label className = "Meta-label">
                     Start time:
-                    <input type="text" value={this.state.startTime} onChange={this.handleChangeStartTime}/>
+                    <input className = "Meta-input" type="text" value={this.state.startTime} onChange={this.handleChangeStartTime}/>
                 </label>
                 <label className = "Meta-label">
                     End time:
-                    <input type="text" value={this.state.endTime} onChange={this.handleChangeEndTime}/>
+                    <input className = "Meta-input" type="text" value={this.state.endTime} onChange={this.handleChangeEndTime}/>
                 </label>
                 <AttendeesComponent></AttendeesComponent>
+                <br/>
                 <input type="file" id="inputFile" ref={this.fileInput} onChange={() => this.handleFileSubmit(this)} />
             </form>
         );
