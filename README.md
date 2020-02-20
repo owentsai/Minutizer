@@ -36,3 +36,9 @@ If you want to test your cloud functions locally, you need to We're going to use
 > [Source](https://cloud.google.com/functions/docs/concepts/python-runtime): The Cloud Functions Python runtime is based on Python version 3.7.1. 
 
 * Create our virtual environment: `pyenv virtualenv 3.7.1 hacksbc`. Then go to the root directory of our repo, run: `pyenv local hacksbc`. From now on, the virtual environment will always automatically activate when you are in any folder in the repo. You should see `(hacksbc)` appearing on the left of your prompt line. 
+
+###  🏗 Frontend deployment steps
+ 1. Install Google Cloud SDK: follow the steps on this [page](https://cloud.google.com/sdk/docs). During `gcloud init`, remember to sign in as hacksbc319@gmail.com, and select the correct project.
+ 2. Go to the root directory of `minutizer-react`
+ 3. Run `yarn build`. After the build process is successfully complete, run `gcloud app deploy`. This process may take a few minutes.
+ App Engine will pick up the optimized production build files in `/build` folder, and serve our application as a static website. 
