@@ -1,6 +1,5 @@
 # [START runtime]
-runtime: nodejs
-env: flex
+runtime: nodejs10
 # [END runtime]
 
 # [START handlers]
