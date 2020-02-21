@@ -2,14 +2,18 @@ import React from 'react';
 import logo from './logo.svg';
 import AttendeesComponent from "./AttendeesComponent";
 import './MetaFields.css';
+import TimePickers from "./TimePicker";
+import DatePickers from "./DatePicker";
 
 export default class MetaFields extends React.Component<{}, {organizer: any, startTime: any, endTime: any}> {
     private fileInput = React.createRef<HTMLInputElement>();
+
     constructor(props: any) {
         super(props);
         this.state = {organizer: '',
             startTime: '',
-            endTime: ''
+            endTime: '',
+
         };
         this.handleChangeOrganizer = this.handleChangeOrganizer.bind(this);
         this.handleChangeStartTime = this.handleChangeStartTime.bind(this);
@@ -35,7 +39,7 @@ export default class MetaFields extends React.Component<{}, {organizer: any, sta
             if (extension === "wav" || extension === "mp3") {
                 // @ts-ignore: Object is possibly 'null'.
                 alert(`Selected file - ${this.fileInput.current.files[0].name}`);
-                this.uploadToCloud();
+                //this.uploadToCloud();
                 return true;
             } else {
                 alert('Invalid file. Only .mp3 or .wav files accepted');
@@ -98,16 +102,25 @@ export default class MetaFields extends React.Component<{}, {organizer: any, sta
                     <input className = "Meta-input" type="text" value={this.state.organizer} onChange={this.handleChangeOrganizer} />
                 </label>
                 <label className = "Meta-label">
-                    Start time:
-                    <input className = "Meta-input" type="text" value={this.state.startTime} onChange={this.handleChangeStartTime}/>
+                    Meeting Date:
+                    {/*<input className = "Meta-input" type="text" value={this.state.endTime} onChange={this.handleChangeEndTime}/>*/}
+                    <DatePickers />
                 </label>
                 <label className = "Meta-label">
-                    End time:
-                    <input className = "Meta-input" type="text" value={this.state.endTime} onChange={this.handleChangeEndTime}/>
+                    Start Time:
+                    {/*<input className = "Meta-input" type="text" value={this.state.startTime} onChange={this.handleChangeStartTime}/>*/}
+                    <TimePickers/>
                 </label>
+                <label className = "Meta-label">
+                    End Time:
+                    {/*<input className = "Meta-input" type="text" value={this.state.endTime} onChange={this.handleChangeEndTime}/>*/}
+                    <TimePickers/>
+                </label>
+
                 <AttendeesComponent></AttendeesComponent>
                 <br/>
                 <input type="file" accept = "audio/*" id="inputFile" ref={this.fileInput} onChange={() => this.handleFileSubmit(this)} />
+
             </form>
         );
     }
