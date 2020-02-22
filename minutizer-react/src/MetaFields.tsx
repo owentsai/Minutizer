@@ -39,7 +39,7 @@ export default class MetaFields extends React.Component<{}, {organizer: any, sta
             if (extension === "wav" || extension === "mp3") {
                 // @ts-ignore: Object is possibly 'null'.
                 alert(`Selected file - ${this.fileInput.current.files[0].name}`);
-                //this.uploadToCloud();
+                this.uploadToCloud();
                 return true;
             } else {
                 alert('Invalid file. Only .mp3 or .wav files accepted');
@@ -50,50 +50,50 @@ export default class MetaFields extends React.Component<{}, {organizer: any, sta
         }    
     }
 
-    private uploadToCloud() {
-        // Imports the Google Cloud client library
-        const { Storage } = require("@google-cloud/storage");
-        const path = require("path");
-        const GOOGLE_CLOUD_PROJECT_ID = "hacksbc-268409"; // Replace with your project ID
-        // const GOOGLE_CLOUD_KEYFILE = path.join(__dirname,"../hacksbc-268409-3783f43ce9f1.json"); // Replace with the path to the downloaded private key
-        const GOOGLE_CLOUD_KEYFILE = "Desktop/hacksbc-268409-3783f43ce9f1.json";
 
-        // console.log(GOOGLE_CLOUD_KEYFILE);
-        // console.log(__dirname);
+    uploadToCloud(){
+        const metadata = {
+            //Stub values
+            meetingId: "00001",
+            organizerUserName: "Josh",
+            startTime: "7 AM",
+            endTime: "8 AM",
+        };
+        const metadataPromise = this.getSignedURL(metadata)
 
-        // Creates a client
-        // SOMETHING'S WRONG WITH THIS CONSTRUCTOR
-        const storage = Storage({
-            projectId: GOOGLE_CLOUD_PROJECT_ID,
-            keyFilename: GOOGLE_CLOUD_KEYFILE,
+        metadataPromise.then((result) => {
+            console.log(result);
+        }).catch((error) => {
+            console.log(`In catch: ${error}`);
         });
-
-        console.log("got here");
-        storage.getBuckets().then( (x:any) => console.log(x));
-
-        const bucketName = "minutizer_recordings";
-        const filename = path.join(__dirname,"./test.txt");
-
-        console.log(filename);
-
-        async function uploadFile() {
-            // Uploads a local file to the bucket
-            await storage.bucket(bucketName).upload(filename, {
-                // Support for HTTP requests made with `Accept-Encoding: gzip`
-                // By setting the option `destination`, you can change the name of the
-                // object you are uploading to a bucket.
-                metadata: {
-                    // Enable long-lived HTTP caching headers
-                    // Use only if the contents of the file will never change
-                    // (If the contents will change, use cacheControl: 'no-cache')
-                    cacheControl: 'public, max-age=31536000',
-                },
-            });
-            console.log(`${filename} uploaded to ${bucketName}.`);
-        }
-        uploadFile().catch(console.error);
     }
 
+
+    //HTTP request using XMLHTTP
+    getSignedURL(metadata: any){
+        return new Promise(function (fulfill, reject) {
+
+            // const proxyurl = "https://cors-anywhere.herokuapp.com/";
+            const URL = "https://us-central1-hacksbc-268409.cloudfunctions.net/upload_audio";
+            const request = new XMLHttpRequest();
+            request.open('POST', URL, true);
+            request.setRequestHeader('X-PINGOTHER', 'pingpong');
+            request.setRequestHeader("Content-Type", "application/json");
+            request.onreadystatechange = function () {
+                if(request.readyState === XMLHttpRequest.DONE && request.status === 200) {
+                    console.log(request.responseText);
+                }
+            };
+            request.onload = function () {
+                fulfill(request.response);
+            };
+            request.onerror = function () {
+                reject('The request failed')
+            }
+
+            request.send(JSON.stringify(metadata));
+        });
+    }
     render() {
         return (
             <form className = 'metaForm'>
