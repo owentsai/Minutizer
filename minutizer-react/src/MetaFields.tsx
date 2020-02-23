@@ -5,20 +5,22 @@ import './MetaFields.css';
 import TimePickers from "./TimePicker";
 import DatePickers from "./DatePicker";
 
-export default class MetaFields extends React.Component<{}, {organizer: any, startTime: any, endTime: any}> {
+export default class MetaFields extends React.Component<{}, {organizer: any, startTime: any, endTime: any, meetingName: any}> {
     private fileInput = React.createRef<HTMLInputElement>();
 
     constructor(props: any) {
         super(props);
-        this.state = {organizer: '',
+        this.state = {
+            organizer: '',
             startTime: '',
             endTime: '',
-
+            meetingName: '',
         };
         this.handleChangeOrganizer = this.handleChangeOrganizer.bind(this);
         this.handleChangeStartTime = this.handleChangeStartTime.bind(this);
         this.handleChangeEndTime = this.handleChangeEndTime.bind(this);
         this.handleFileSubmit = this.handleFileSubmit.bind(this);
+        this.handleChangeMeetingName = this.handleChangeMeetingName.bind(this);
     }
 
     handleChangeOrganizer(event: any) {
@@ -29,6 +31,9 @@ export default class MetaFields extends React.Component<{}, {organizer: any, sta
     }
     handleChangeEndTime(event: any) {
         this.setState({endTime: event.target.value});
+    }
+    handleChangeMeetingName(event: any){
+        this.setState({meetingName: event.target.value});
     }
 
     handleFileSubmit(event: any): boolean{
@@ -54,17 +59,61 @@ export default class MetaFields extends React.Component<{}, {organizer: any, sta
     uploadToCloud(){
         const metadata = {
             //Stub values
-            meetingId: "00001",
-            organizerUserName: "Josh",
-            startTime: "7 AM",
-            endTime: "8 AM",
+            contentType: "json",
+            organizerUserName: "123",
+            meetingName: "testMeeting",
+            startTime: "00:00:00",
+            endTime: "11:11:11",
+            meetingDate: "2020:01:01",
         };
-        const metadataPromise = this.getSignedURL(metadata)
+        const metadataPromise = this.getSignedURL(metadata);
 
-        metadataPromise.then((result) => {
+        let signedURL;
+        metadataPromise.then((result:any) => {
             console.log(result);
+            signedURL = result;
+            const sendFilePromise = this.sendAudioFile(signedURL);
+            sendFilePromise.then((result:any) => {
+                console.log(result);
+                console.log("file sent successfully!");
+            }).catch((error) => {
+                console.log(`In catch: ${error}`);
+            });
         }).catch((error) => {
             console.log(`In catch: ${error}`);
+        });
+
+    }
+
+    sendAudioFile(signedURL: any) {
+        return new Promise(function (fulfill, reject) {
+
+            //Getting the audio file from input tag
+            let fileInput = document.getElementById('inputFile');
+            // @ts-ignore
+            let file = fileInput.files[0];
+            // @ts-ignore
+            let fileType = fileInput.files[0].type;
+            let formData = new FormData();
+            formData.append('file',file);
+
+            const request = new XMLHttpRequest();
+            request.open('PUT', signedURL, true);
+            request.setRequestHeader('X-PINGOTHER', 'pingpong');
+            request.setRequestHeader("Content-Type", fileType);
+            request.onreadystatechange = function () {
+                if(request.readyState === XMLHttpRequest.DONE && request.status === 200) {
+                    console.log(request.responseText);
+                }
+            };
+            request.onload = function () {
+                fulfill(request.response);
+            };
+            request.onerror = function () {
+                reject('The request failed')
+            };
+
+            request.send(formData);
         });
     }
 
@@ -89,7 +138,7 @@ export default class MetaFields extends React.Component<{}, {organizer: any, sta
             };
             request.onerror = function () {
                 reject('The request failed')
-            }
+            };
 
             request.send(JSON.stringify(metadata));
         });
@@ -97,6 +146,10 @@ export default class MetaFields extends React.Component<{}, {organizer: any, sta
     render() {
         return (
             <form className = 'metaForm'>
+                <label className="Meta-label">
+                    Meeting Name:
+                    <input className="Meta-input" type="text" value={this.state.meetingName} onChange={this.handleChangeMeetingName} />
+                </label>
                 <label className = "Meta-label">
                     Meeting Organizer:
                     <input className = "Meta-input" type="text" value={this.state.organizer} onChange={this.handleChangeOrganizer} />
