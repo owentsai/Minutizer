@@ -59,7 +59,7 @@ export default class MetaFields extends React.Component<{}, {organizer: any, sta
     uploadToCloud(){
         const metadata = {
             //Stub values
-            contentType: "json",
+            contentType: "audio/mp3",
             organizerUserName: "123",
             meetingName: "testMeeting",
             startTime: "00:00:00",
@@ -99,7 +99,6 @@ export default class MetaFields extends React.Component<{}, {organizer: any, sta
 
             const request = new XMLHttpRequest();
             request.open('PUT', signedURL, true);
-            request.setRequestHeader('X-PINGOTHER', 'pingpong');
             request.setRequestHeader("Content-Type", fileType);
             request.onreadystatechange = function () {
                 if(request.readyState === XMLHttpRequest.DONE && request.status === 200) {
@@ -126,7 +125,6 @@ export default class MetaFields extends React.Component<{}, {organizer: any, sta
             const URL = "https://us-central1-hacksbc-268409.cloudfunctions.net/upload_audio";
             const request = new XMLHttpRequest();
             request.open('POST', URL, true);
-            request.setRequestHeader('X-PINGOTHER', 'pingpong');
             request.setRequestHeader("Content-Type", "application/json");
             request.onreadystatechange = function () {
                 if(request.readyState === XMLHttpRequest.DONE && request.status === 200) {
@@ -167,7 +165,7 @@ export default class MetaFields extends React.Component<{}, {organizer: any, sta
                 <label className = "Meta-label">
                     End Time:
                     {/*<input className = "Meta-input" type="text" value={this.state.endTime} onChange={this.handleChangeEndTime}/>*/}
-                    <TimePickers/>
+                    <TimePickers />
                 </label>
 
                 <AttendeesComponent></AttendeesComponent>

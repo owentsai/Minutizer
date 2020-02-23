@@ -18,7 +18,6 @@ const useStyles = makeStyles((theme: Theme) =>
 
 export default function TimePickers() {
     const classes = useStyles();
-
     return (
         <form className={classes.container} noValidate>
             <TextField
