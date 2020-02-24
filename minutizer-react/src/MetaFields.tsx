@@ -1,6 +1,7 @@
 import React from 'react';
 import logo from './logo.svg';
 import AttendeesComponent from "./AttendeesComponent";
+import UploadButtons from "./UploadButton";
 
 export default class NameForm extends React.Component<{}, {organizer: any, startTime: any, endTime: any}> {
     private fileInput = React.createRef<HTMLInputElement>();
@@ -41,7 +42,7 @@ export default class NameForm extends React.Component<{}, {organizer: any, start
             }
         }catch (e) {
             return false;
-        }    
+        }
     }
 
     render() {
@@ -61,6 +62,7 @@ export default class NameForm extends React.Component<{}, {organizer: any, start
                 </label>
                 <AttendeesComponent></AttendeesComponent>
                 <input type="file" id="inputFile" ref={this.fileInput} onChange={() => this.handleFileSubmit(this)} />
+                <UploadButtons />
             </form>
         );
     }
