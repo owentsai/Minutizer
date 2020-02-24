@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import './App.css';
+import './AttendeesComponent.css';
 
 export default class IncorporationForm extends React.Component<{}, {name: any, attendees: any}> {
     constructor(props: any) {
@@ -42,12 +42,12 @@ export default class IncorporationForm extends React.Component<{}, {name: any, a
         // @ts-ignore
         // @ts-ignore
         return (
-            <form >
+            <form className = "AttendeeForm">
 
                 <h4>Attendees</h4>
 
                 {this.state.attendees.map((shareholder:any, idx:any) => (
-                    <div className="shareholder">
+                    <div className="attendeeDiv">
                         <input
                             type="text"
                             placeholder={`Attendee #${idx + 1} username`}

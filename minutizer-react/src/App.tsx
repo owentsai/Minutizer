@@ -1,6 +1,6 @@
 import React from 'react';
 import logo from './logo.svg';
-import './App.css';
+import './MetaFields.css';
 import MetaFields from "./MetaFields";
 import AttendeesComponent from "./AttendeesComponent";
 import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
