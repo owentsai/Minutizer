@@ -160,7 +160,7 @@ export default class MetaFields extends React.Component<{}, {organizer: any, sta
                 <label className = "Meta-label">
                     Start Time:
                     {/*<input className = "Meta-input" type="text" value={this.state.startTime} onChange={this.handleChangeStartTime}/>*/}
-                    <TimePickers/>
+                    <TimePickers />
                 </label>
                 <label className = "Meta-label">
                     End Time:

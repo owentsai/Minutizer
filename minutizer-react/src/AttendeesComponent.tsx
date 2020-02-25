@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import './AttendeesComponent.css';
 
-export default class IncorporationForm extends React.Component<{}, {name: any, attendees: any}> {
+export default class AttendeesComponent extends React.Component<{}, {name: any, attendees: any}> {
     constructor(props: any) {
         super(props);
         this.state = {
@@ -75,5 +75,5 @@ export default class IncorporationForm extends React.Component<{}, {name: any, a
     }
 }
 
-const rootElement = document.getElementById("root");
-ReactDOM.render(<IncorporationForm />, rootElement);
+// const rootElement = document.getElementById("root");
+// ReactDOM.render(<AttendeesComponent />, rootElement);
