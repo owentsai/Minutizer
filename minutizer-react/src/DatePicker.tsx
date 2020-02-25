@@ -3,18 +3,13 @@ import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
 import TextField from '@material-ui/core/TextField';
 
 
-export default class DatePickers extends React.Component<{},{date:any}> {
+export default class DatePickers extends React.Component<{parentCallback:any},{date:any}> {
 
-    constructor(props: any) {
-        super(props);
-        this.state={
-            date: '',
-        };
-        this.handleTimeChange = this.handleTimeChange.bind(this);
+
+    handleDateChange(event: any){
+        this.props.parentCallback(event.target.value);
     }
-    handleTimeChange(event: any){
-        console.log(event.target.value);
-    }
+
     render() {
         return (
             <form >
@@ -24,9 +19,9 @@ export default class DatePickers extends React.Component<{},{date:any}> {
                     type="date"
                     defaultValue="2020-01-01"
                     InputLabelProps={{
-                    shrink: true,
+                        shrink: true,
                     }}
-                    onChange = {this.handleTimeChange}
+                    onChange={this.handleDateChange.bind(this)}
                 />
             </form>
         );

@@ -12,7 +12,7 @@ import {
     MuiPickersUtilsProvider,
 } from '@material-ui/pickers';
 
-export default class MetaFields extends React.Component<{}, {organizer: any, startTime: any, endTime: any, meetingName: any}> {
+export default class MetaFields extends React.Component<{}, {organizer: any, startTime: any, endTime: any, meetingName: any,meetingDate:any}> {
     private fileInput = React.createRef<HTMLInputElement>();
 
     constructor(props: any) {
@@ -22,20 +22,26 @@ export default class MetaFields extends React.Component<{}, {organizer: any, sta
             startTime: '',
             endTime: '',
             meetingName: '',
+            meetingDate: '',
         };
         this.handleChangeOrganizer = this.handleChangeOrganizer.bind(this);
         this.handleChangeStartTime = this.handleChangeStartTime.bind(this);
         this.handleChangeEndTime = this.handleChangeEndTime.bind(this);
         this.handleFileSubmit = this.handleFileSubmit.bind(this);
         this.handleChangeMeetingName = this.handleChangeMeetingName.bind(this);
+        this.handleChangeDate = this.handleChangeDate.bind(this);
     }
 
     handleChangeOrganizer(event: any) {
         this.setState({organizer: event.target.value});
     }
-    handleChangeStartTime(event: any) {
-        this.setState({startTime: event.target.value});
-        console.log("got here");
+    handleChangeDate(childValue: any) {
+        this.setState({meetingDate: childValue});
+        console.log(childValue);
+    }
+    handleChangeStartTime(childValue: any) {
+        this.setState({startTime: childValue});
+        console.log(childValue);
     }
     handleChangeEndTime(event: any) {
         this.setState({endTime: event.target.value});
@@ -150,6 +156,8 @@ export default class MetaFields extends React.Component<{}, {organizer: any, sta
         });
     }
     render() {
+        // @ts-ignore
+        // @ts-ignore
         return (
             <form className = 'metaForm'>
                 <label className="Meta-label">
@@ -163,7 +171,7 @@ export default class MetaFields extends React.Component<{}, {organizer: any, sta
                 <label className = "Meta-label">
                     Meeting Date:
                     {/*<input className = "Meta-input" type="text" value={this.state.endTime} onChange={this.handleChangeEndTime}/>*/}
-                    <DatePickers />
+                    <DatePickers parentCallback={this.handleChangeDate}/>
 
                 </label>
                 <label className = "Meta-label">
