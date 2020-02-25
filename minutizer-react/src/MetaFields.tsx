@@ -4,6 +4,13 @@ import AttendeesComponent from "./AttendeesComponent";
 import './MetaFields.css';
 import TimePickers from "./TimePicker";
 import DatePickers from "./DatePicker";
+import DateFnsUtils from '@date-io/date-fns'; // choose your lib
+import {
+    DatePicker,
+    TimePicker,
+    DateTimePicker,
+    MuiPickersUtilsProvider,
+} from '@material-ui/pickers';
 
 export default class MetaFields extends React.Component<{}, {organizer: any, startTime: any, endTime: any, meetingName: any}> {
     private fileInput = React.createRef<HTMLInputElement>();
@@ -28,6 +35,7 @@ export default class MetaFields extends React.Component<{}, {organizer: any, sta
     }
     handleChangeStartTime(event: any) {
         this.setState({startTime: event.target.value});
+        console.log("got here");
     }
     handleChangeEndTime(event: any) {
         this.setState({endTime: event.target.value});
@@ -64,7 +72,7 @@ export default class MetaFields extends React.Component<{}, {organizer: any, sta
             meetingName: "testMeeting",
             startTime: "00:00:00",
             endTime: "11:11:11",
-            meetingDate: "2020:01:01",
+            meetingDate: "2020-01-01",
         };
         const metadataPromise = this.getSignedURL(metadata);
 
@@ -156,6 +164,7 @@ export default class MetaFields extends React.Component<{}, {organizer: any, sta
                     Meeting Date:
                     {/*<input className = "Meta-input" type="text" value={this.state.endTime} onChange={this.handleChangeEndTime}/>*/}
                     <DatePickers />
+
                 </label>
                 <label className = "Meta-label">
                     Start Time:

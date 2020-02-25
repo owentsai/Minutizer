@@ -2,37 +2,34 @@ import React from 'react';
 import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
 import TextField from '@material-ui/core/TextField';
 
-const useStyles = makeStyles((theme: Theme) =>
-    createStyles({
-        container: {
-            display: 'flex',
-            flexWrap: 'wrap',
-        },
-        textField: {
-            marginLeft: theme.spacing(1),
-            marginRight: theme.spacing(1),
-            width: 200,
-        },
-    }),
-);
 
-export default function TimePickers() {
-    const classes = useStyles();
-    return (
-        <form className={classes.container} noValidate>
-            <TextField
-                id="time"
-                label="Time"
-                type="time"
-                defaultValue="07:30"
-                className={classes.textField}
-                InputLabelProps={{
-                    shrink: true,
-                }}
-                inputProps={{
-                    step: 300, // 5 min
-                }}
-            />
-        </form>
-    );
+export default class TimePickers extends React.Component<{},{time:any}> {
+
+    constructor(props: any) {
+        super(props)
+        this.state={
+            time: '',
+        };
+        this.handleTimeChange = this.handleTimeChange.bind(this);
+    }
+    handleTimeChange(event: any){
+        console.log(event.target.value);
+    }
+    render() {
+        return (
+            <form >
+                <TextField
+                    id="time"
+                    label="Time"
+                    type="time"
+                    defaultValue="00:00:00"
+                    InputLabelProps={{
+                        shrink: true,
+                    }}
+                    onChange = {this.handleTimeChange}
+                />
+            </form>
+        );
+    }
+
 }
