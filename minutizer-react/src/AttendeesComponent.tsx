@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import './AttendeesComponent.css';
 
-export default class AttendeesComponent extends React.Component<{}, {name: any, attendees: any}> {
+export default class IncorporationForm extends React.Component<{parentCallback:any}, {name: any, attendees: any}> {
     constructor(props: any) {
         super(props);
         this.state = {
@@ -18,6 +18,7 @@ export default class AttendeesComponent extends React.Component<{}, {name: any, 
         });
 
         this.setState({ attendees: newShareholders });
+        this.props.parentCallback(this.state.attendees);
     };
 
     // handleSubmit(evt: any) {
@@ -29,12 +30,14 @@ export default class AttendeesComponent extends React.Component<{}, {name: any, 
         this.setState({
             attendees: this.state.attendees.concat([{ name: "" }])
         });
+        this.props.parentCallback(this.state.attendees);
     };
 
     handleRemoveShareholder(idx: any)  {
         this.setState({
             attendees: this.state.attendees.filter((s:any, sidx: any) => idx !== sidx)
         });
+        this.props.parentCallback(this.state.attendees);
     };
 
     render() {
@@ -75,5 +78,3 @@ export default class AttendeesComponent extends React.Component<{}, {name: any, 
     }
 }
 
-// const rootElement = document.getElementById("root");
-// ReactDOM.render(<AttendeesComponent />, rootElement);
