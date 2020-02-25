@@ -3,17 +3,12 @@ import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
 import TextField from '@material-ui/core/TextField';
 
 
-export default class TimePickers extends React.Component<{},{time:any}> {
+export default class TimePickers extends React.Component<{parentCallback:any},{time:any}> {
 
-    constructor(props: any) {
-        super(props)
-        this.state={
-            time: '',
-        };
-        this.handleTimeChange = this.handleTimeChange.bind(this);
-    }
+
     handleTimeChange(event: any){
-        console.log(event.target.value);
+        this.props.parentCallback(event.target.value);
+
     }
     render() {
         return (
@@ -26,7 +21,7 @@ export default class TimePickers extends React.Component<{},{time:any}> {
                     InputLabelProps={{
                         shrink: true,
                     }}
-                    onChange = {this.handleTimeChange}
+                    onChange = {this.handleTimeChange.bind(this)}
                 />
             </form>
         );

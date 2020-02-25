@@ -12,7 +12,15 @@ import {
     MuiPickersUtilsProvider,
 } from '@material-ui/pickers';
 
-export default class MetaFields extends React.Component<{}, {organizer: any, startTime: any, endTime: any, meetingName: any,meetingDate:any}> {
+interface inputProps {
+    organizer: any,
+    startTime: any,
+    endTime: any,
+    meetingName: any,
+    meetingDate:any,
+    attendees:any
+}
+export default class MetaFields extends React.Component<{}, inputProps> {
     private fileInput = React.createRef<HTMLInputElement>();
 
     constructor(props: any) {
@@ -23,6 +31,7 @@ export default class MetaFields extends React.Component<{}, {organizer: any, sta
             endTime: '',
             meetingName: '',
             meetingDate: '',
+            attendees: [],
         };
         this.handleChangeOrganizer = this.handleChangeOrganizer.bind(this);
         this.handleChangeStartTime = this.handleChangeStartTime.bind(this);
@@ -30,6 +39,7 @@ export default class MetaFields extends React.Component<{}, {organizer: any, sta
         this.handleFileSubmit = this.handleFileSubmit.bind(this);
         this.handleChangeMeetingName = this.handleChangeMeetingName.bind(this);
         this.handleChangeDate = this.handleChangeDate.bind(this);
+        this.handleChangeAttendees = this.handleChangeAttendees.bind(this);
     }
 
     handleChangeOrganizer(event: any) {
@@ -43,11 +53,16 @@ export default class MetaFields extends React.Component<{}, {organizer: any, sta
         this.setState({startTime: childValue});
         console.log(childValue);
     }
-    handleChangeEndTime(event: any) {
-        this.setState({endTime: event.target.value});
+    handleChangeEndTime(childValue: any) {
+        this.setState({endTime: childValue});
+        console.log(childValue);
     }
     handleChangeMeetingName(event: any){
         this.setState({meetingName: event.target.value});
+    }
+    handleChangeAttendees(childValue: any){
+        this.setState({attendees: childValue});
+        console.log(this.state.attendees);
     }
 
     handleFileSubmit(event: any): boolean{
@@ -71,15 +86,18 @@ export default class MetaFields extends React.Component<{}, {organizer: any, sta
 
 
     uploadToCloud(){
+        // @ts-ignore
         const metadata = {
             //Stub values
-            contentType: "audio/mp3",
-            organizerUserName: "123",
-            meetingName: "testMeeting",
-            startTime: "00:00:00",
-            endTime: "11:11:11",
-            meetingDate: "2020-01-01",
+            // @ts-ignore: Object is possibly 'null'.
+            contentType: this.fileInput.current.files[0].type,
+            organizerUserName: this.state.organizer,
+            meetingName: this.state.meetingName,
+            startTime: this.state.startTime+":00",
+            endTime: this.state.endTime+":00",
+            meetingDate: this.state.meetingDate,
         };
+        console.log(metadata);
         const metadataPromise = this.getSignedURL(metadata);
 
         let signedURL;
@@ -92,6 +110,7 @@ export default class MetaFields extends React.Component<{}, {organizer: any, sta
                 console.log("file sent successfully!");
             }).catch((error) => {
                 console.log(`In catch: ${error}`);
+                alert(`User :  ${this.state.organizer} does not exist`);
             });
         }).catch((error) => {
             console.log(`In catch: ${error}`);
@@ -177,15 +196,15 @@ export default class MetaFields extends React.Component<{}, {organizer: any, sta
                 <label className = "Meta-label">
                     Start Time:
                     {/*<input className = "Meta-input" type="text" value={this.state.startTime} onChange={this.handleChangeStartTime}/>*/}
-                    <TimePickers/>
+                    <TimePickers parentCallback={this.handleChangeStartTime}/>
                 </label>
                 <label className = "Meta-label">
                     End Time:
                     {/*<input className = "Meta-input" type="text" value={this.state.endTime} onChange={this.handleChangeEndTime}/>*/}
-                    <TimePickers />
+                    <TimePickers parentCallback={this.handleChangeEndTime}/>
                 </label>
 
-                <AttendeesComponent></AttendeesComponent>
+                <AttendeesComponent parentCallback={this.handleChangeAttendees}></AttendeesComponent>
                 <br/>
                 <input type="file" accept = "audio/*" id="inputFile" ref={this.fileInput} onChange={() => this.handleFileSubmit(this)} />
 
