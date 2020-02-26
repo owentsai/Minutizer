@@ -57,27 +57,6 @@ export default class MetaFields extends React.Component<{}, inputProps> {
         console.log(this.state.attendees);
     }
 
-    handleAttendeeNameChange (idx: any, evt: any){
-        const newShareholders = this.state.attendees.map((shareholder: any, sidx: any) => {
-            if (idx !== sidx) return shareholder;
-            return { ...shareholder, name: evt.target.value };
-        });
-
-        this.setState({ attendees: newShareholders });
-    };
-
-    handleAddAttendee = () => {
-        this.setState({
-            attendees: this.state.attendees.concat([{ name: "" }])
-        });
-    };
-
-    handleRemoveAttendee(idx: any)  {
-        this.setState({
-            attendees: this.state.attendees.filter((s:any, sidx: any) => idx !== sidx)
-        });
-    };
-
     handleFileSubmit(event: any): boolean{
         try {
             // @ts-ignore: Object is possibly 'null'.
@@ -231,9 +210,7 @@ export default class MetaFields extends React.Component<{}, inputProps> {
                 </div>
 
 
-                <AttendeesComponent handleAttendeeNameChange={this.handleAttendeeNameChange}
-                                    handleAttendeeAdd={this.handleAddAttendee}
-                                    handleAttendeeRemove={this.handleRemoveAttendee}></AttendeesComponent>
+                <AttendeesComponent parentCallback={this.handleChangeAttendees}></AttendeesComponent>
                 <br/>
                 <input type="file" accept = "audio/*" id="inputFile" ref={this.fileInput} onChange={() => this.handleFileSubmit(this)} />
             </form>
