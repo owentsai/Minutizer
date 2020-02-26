@@ -22,7 +22,7 @@ export default class MetaFields extends React.Component<{}, inputProps> {
             startTime: '',
             endTime: '',
             meetingName: '',
-            meetingDate: '',
+            meetingDate: '2020-01-01',
             attendees: [],
         };
         this.handleChangeOrganizer = this.handleChangeOrganizer.bind(this);
@@ -89,7 +89,8 @@ export default class MetaFields extends React.Component<{}, inputProps> {
             endTime: this.state.endTime+":00",
             meetingDate: this.state.meetingDate,
         };
-        if (this.state.attendees.length > 0){
+        console.log(this.state.attendees.length)
+;        if (this.state.attendees.length > 0){
             metadata["attendees"] = this.state.attendees;
         }
         console.log(metadata);
