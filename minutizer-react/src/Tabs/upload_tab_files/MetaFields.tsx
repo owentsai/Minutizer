@@ -71,7 +71,7 @@ export default class MetaFields extends React.Component<{}, inputProps> {
         console.log(this.state.attendees);
     };
 
-    handleAddShareholder() {
+    handleAddShareholder = () =>{
         this.setState({
             attendees: this.state.attendees.concat([{ name: "" }])
         });
@@ -101,6 +101,7 @@ export default class MetaFields extends React.Component<{}, inputProps> {
                 return false;
             }
         }catch (e) {
+            console.log(e.message);
             return false;
         }    
     }

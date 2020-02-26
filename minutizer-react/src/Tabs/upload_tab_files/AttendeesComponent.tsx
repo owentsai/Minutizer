@@ -16,10 +16,11 @@ export default class IncorporationForm extends React.Component<{parentCallback1:
             if (idx !== sidx) return shareholder;
             return { ...shareholder, name };
         });
+        this.setState({ attendees: newShareholders });
         this.props.parentCallback3(idx,evt);
     };
 
-    handleAddShareholder() {
+    handleAddShareholder = () =>{
         this.setState({
             attendees: this.state.attendees.concat([{ name: "" }])
         });
