@@ -57,6 +57,27 @@ export default class MetaFields extends React.Component<{}, inputProps> {
         console.log(this.state.attendees);
     }
 
+    handleAttendeeNameChange (idx: any, evt: any){
+        const newShareholders = this.state.attendees.map((shareholder: any, sidx: any) => {
+            if (idx !== sidx) return shareholder;
+            return { ...shareholder, name: evt.target.value };
+        });
+
+        this.setState({ attendees: newShareholders });
+    };
+
+    handleAddAttendee = () => {
+        this.setState({
+            attendees: this.state.attendees.concat([{ name: "" }])
+        });
+    };
+
+    handleRemoveAttendee(idx: any)  {
+        this.setState({
+            attendees: this.state.attendees.filter((s:any, sidx: any) => idx !== sidx)
+        });
+    };
+
     handleFileSubmit(event: any): boolean{
         try {
             // @ts-ignore: Object is possibly 'null'.
@@ -66,7 +87,7 @@ export default class MetaFields extends React.Component<{}, inputProps> {
                 // @ts-ignore: Object is possibly 'null'.
                 let fileName = this.fileInput.current.files[0].name;
                 alert(`Selected file - ` + fileName);
-                this.setState({meetingName: fileName})
+                this.setState({meetingName: fileName});
                 this.uploadToCloud();
                 return true;
             } else {
@@ -89,6 +110,9 @@ export default class MetaFields extends React.Component<{}, inputProps> {
             endTime: this.state.endTime+":00",
             meetingDate: this.state.meetingDate,
         };
+        if (this.state.attendees.length > 0){
+            metadata["attendees"] = this.state.attendees;
+        }
         console.log(metadata);
         const metadataPromise = this.getSignedURL(metadata);
 
@@ -199,15 +223,17 @@ export default class MetaFields extends React.Component<{}, inputProps> {
                     </div>
                     <div className="form-group col-md-4">
                         <label className = "Meta-label font-weight-bold">
-                                End Time:
-                                {/*<input className = "Meta-input" type="text" value={this.state.endTime} onChange={this.handleChangeEndTime}/>*/}
-                                <TimePickers parentCallback={this.handleChangeEndTime}/>
+                            End Time:
+                            {/*<input className = "Meta-input" type="text" value={this.state.endTime} onChange={this.handleChangeEndTime}/>*/}
+                            <TimePickers parentCallback={this.handleChangeEndTime}/>
                         </label>
                     </div>
                 </div>
 
 
-                <AttendeesComponent parentCallback={this.handleChangeAttendees}></AttendeesComponent>
+                <AttendeesComponent handleAttendeeNameChange={this.handleAttendeeNameChange}
+                                    handleAttendeeAdd={this.handleAddAttendee}
+                                    handleAttendeeRemove={this.handleRemoveAttendee}></AttendeesComponent>
                 <br/>
                 <input type="file" accept = "audio/*" id="inputFile" ref={this.fileInput} onChange={() => this.handleFileSubmit(this)} />
             </form>

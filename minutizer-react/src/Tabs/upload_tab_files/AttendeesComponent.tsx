@@ -21,11 +21,6 @@ export default class IncorporationForm extends React.Component<{parentCallback:a
         this.props.parentCallback(this.state.attendees);
     };
 
-    // handleSubmit(evt: any) {
-    //     const { name, attendees } = this.state;
-    //     alert(`Incorporated: ${name} with ${attendees.length} shareholders`);
-    // };
-
     handleAddShareholder = () => {
         this.setState({
             attendees: this.state.attendees.concat([{ name: "" }])
