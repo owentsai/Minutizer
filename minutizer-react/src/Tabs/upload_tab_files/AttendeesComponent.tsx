@@ -7,7 +7,7 @@ export default class IncorporationForm extends React.Component<{parentCallback:a
         super(props);
         this.state = {
             name: "",
-            attendees: [{ name: "" }]
+            attendees: []
         };
     }
 
@@ -41,9 +41,6 @@ export default class IncorporationForm extends React.Component<{parentCallback:a
     };
 
     render() {
-        // @ts-ignore
-        // @ts-ignore
-        // @ts-ignore
         return (
             <form className = "AttendeeForm">
 

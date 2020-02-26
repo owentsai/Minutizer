@@ -88,7 +88,6 @@ export default class MetaFields extends React.Component<{}, inputProps> {
             startTime: this.state.startTime+":00",
             endTime: this.state.endTime+":00",
             meetingDate: this.state.meetingDate,
-            attendees: this.state.attendees,
         };
         console.log(metadata);
         const metadataPromise = this.getSignedURL(metadata);
@@ -103,7 +102,6 @@ export default class MetaFields extends React.Component<{}, inputProps> {
                 alert("file sent successfully!");
             }).catch((error) => {
                 console.log(`In catch: ${error}`);
-                alert(`User :  ${this.state.organizer} does not exist`);
             });
         }).catch((error) => {
             console.log(`In catch: ${error}`);
