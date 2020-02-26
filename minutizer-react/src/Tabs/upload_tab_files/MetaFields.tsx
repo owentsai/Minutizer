@@ -169,7 +169,7 @@ export default class MetaFields extends React.Component<{}, inputProps> {
     render() {
         return (
             <form>
-                <div className="form-row">
+                <div className="form-row mb-3">
                     <div className="form-group col-md-6">
                         <label className="Meta-label font-weight-bold">
                             Meeting File Name:
@@ -183,7 +183,7 @@ export default class MetaFields extends React.Component<{}, inputProps> {
                         </label>
                     </div>
                 </div>
-                <div className="form-row ">
+                <div className="form-row mb-3">
                     <div className="form-group col-md-4">
                         <label className = "Meta-label font-weight-bold">
                             Meeting Date:
