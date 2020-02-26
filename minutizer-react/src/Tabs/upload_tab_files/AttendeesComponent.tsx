@@ -47,7 +47,7 @@ export default class IncorporationForm extends React.Component<{parentCallback:a
         return (
             <form className = "AttendeeForm">
 
-                <h4>Attendees</h4>
+                <label className="Meta-label font-weight-bold">Attendees</label>
 
                 {this.state.attendees.map((shareholder:any, idx:any) => (
                     <div className="attendeeDiv">
@@ -60,7 +60,8 @@ export default class IncorporationForm extends React.Component<{parentCallback:a
                         <button
                             type="button"
                             onClick={() => this.handleRemoveShareholder(idx)}
-                            className="small"
+                            className="small bg-warning font-weight-bold "
+                            style={{fontSize: "30px", paddingBottom:"40px"}}
                         >
                             -
                         </button>
@@ -69,7 +70,7 @@ export default class IncorporationForm extends React.Component<{parentCallback:a
                 <button
                     type="button"
                     onClick={this.handleAddShareholder}
-                    className="small"
+                    className="small bg-success"
                 >
                     Add Attendee
                 </button>
