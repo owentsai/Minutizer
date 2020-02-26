@@ -47,7 +47,7 @@ export default class IncorporationForm extends React.Component<{parentCallback:a
         return (
             <form className = "AttendeeForm">
 
-                <label className="Meta-label font-weight-bold">Attendees</label>
+                <label className="Meta-label font-weight-bold d-block">Attendees</label>
 
                 {this.state.attendees.map((shareholder:any, idx:any) => (
                     <div className="attendeeDiv">
