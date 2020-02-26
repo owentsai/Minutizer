@@ -32,6 +32,9 @@ export default class MetaFields extends React.Component<{}, inputProps> {
         this.handleChangeMeetingName = this.handleChangeMeetingName.bind(this);
         this.handleChangeDate = this.handleChangeDate.bind(this);
         this.handleChangeAttendees = this.handleChangeAttendees.bind(this);
+        this.handleShareholderNameChange = this.handleShareholderNameChange.bind(this);
+        this.handleAddShareholder = this.handleAddShareholder.bind(this);
+        this.handleRemoveShareholder = this.handleRemoveShareholder.bind(this);
     }
 
     handleChangeOrganizer(event: any) {
@@ -56,6 +59,31 @@ export default class MetaFields extends React.Component<{}, inputProps> {
         this.setState({attendees: childValue});
         console.log(this.state.attendees);
     }
+
+
+    handleShareholderNameChange (idx: any, evt: any){
+        const name = evt.target.value;
+        const newShareholders = this.state.attendees.map((shareholder: any, sidx: any) => {
+            if (idx !== sidx) return shareholder;
+            return { ...shareholder, name };
+        });
+        this.setState({ attendees: newShareholders });
+        console.log(this.state.attendees);
+    };
+
+    handleAddShareholder() {
+        this.setState({
+            attendees: this.state.attendees.concat([{ name: "" }])
+        });
+        console.log(this.state.attendees);
+    };
+
+    handleRemoveShareholder(idx: any)  {
+        this.setState({
+            attendees: this.state.attendees.filter((s:any, sidx: any) => idx !== sidx)
+        });
+        console.log(this.state.attendees);
+    };
 
     handleFileSubmit(event: any): boolean{
         try {
@@ -216,8 +244,9 @@ export default class MetaFields extends React.Component<{}, inputProps> {
                     </div>
                 </div>
 
-
-                <AttendeesComponent parentCallback={this.handleChangeAttendees}></AttendeesComponent>
+                    <AttendeesComponent parentCallback1={this.handleAddShareholder}
+                                        parentCallback2={this.handleRemoveShareholder}
+                                        parentCallback3={this.handleShareholderNameChange}></AttendeesComponent>
                 <br/>
                 <input type="file" accept = "audio/*" id="inputFile" ref={this.fileInput} onChange={() => this.handleFileSubmit(this)} />
             </form>

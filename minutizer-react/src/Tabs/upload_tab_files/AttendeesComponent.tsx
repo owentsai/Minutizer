@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import './AttendeesComponent.css';
 
-export default class IncorporationForm extends React.Component<{parentCallback:any}, {attendees: any}> {
+export default class IncorporationForm extends React.Component<{parentCallback1:any,parentCallback2:any,parentCallback3:any}, {attendees: any}> {
     constructor(props: any) {
         super(props);
         this.state = {
@@ -16,23 +16,21 @@ export default class IncorporationForm extends React.Component<{parentCallback:a
             if (idx !== sidx) return shareholder;
             return { ...shareholder, name };
         });
-
-        this.setState({ attendees: newShareholders });
-        this.props.parentCallback(this.state.attendees);
+        this.props.parentCallback3(idx,evt);
     };
 
-    handleAddShareholder = () => {
+    handleAddShareholder() {
         this.setState({
             attendees: this.state.attendees.concat([{ name: "" }])
         });
-        this.props.parentCallback(this.state.attendees);
+        this.props.parentCallback1();
     };
 
     handleRemoveShareholder(idx: any)  {
         this.setState({
             attendees: this.state.attendees.filter((s:any, sidx: any) => idx !== sidx)
         });
-        this.props.parentCallback(this.state.attendees);
+        this.props.parentCallback2(idx);
     };
 
     render() {
@@ -61,7 +59,7 @@ export default class IncorporationForm extends React.Component<{parentCallback:a
                 ))}
                 <button
                     type="button"
-                    onClick={this.handleAddShareholder}
+                    onClick={this.handleAddShareholder.bind(this)}
                     className="small bg-success"
                 >
                     Add Attendee
