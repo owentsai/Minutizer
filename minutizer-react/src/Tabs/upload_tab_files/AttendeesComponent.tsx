@@ -2,19 +2,19 @@ import React from "react";
 import ReactDOM from "react-dom";
 import './AttendeesComponent.css';
 
-export default class IncorporationForm extends React.Component<{parentCallback:any}, {name: any, attendees: any}> {
+export default class IncorporationForm extends React.Component<{parentCallback:any}, {attendees: any}> {
     constructor(props: any) {
         super(props);
         this.state = {
-            name: "",
             attendees: []
         };
     }
 
     handleShareholderNameChange (idx: any, evt: any){
+        const name = evt.target.value;
         const newShareholders = this.state.attendees.map((shareholder: any, sidx: any) => {
             if (idx !== sidx) return shareholder;
-            return { ...shareholder, name: evt.target.value };
+            return { ...shareholder, name };
         });
 
         this.setState({ attendees: newShareholders });

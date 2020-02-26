@@ -66,7 +66,6 @@ export default class MetaFields extends React.Component<{}, inputProps> {
                 // @ts-ignore: Object is possibly 'null'.
                 let fileName = this.fileInput.current.files[0].name;
                 alert(`Selected file - ` + fileName);
-                this.setState({meetingName: fileName});
                 this.uploadToCloud();
                 return true;
             } else {
@@ -93,6 +92,13 @@ export default class MetaFields extends React.Component<{}, inputProps> {
 ;        if (this.state.attendees.length > 0){
             metadata["attendees"] = this.state.attendees;
         }
+        if (!this.state.meetingName){
+            // @ts-ignore
+            this.setState({meetingName: this.fileInput.current.files[0].name});
+            // @ts-ignore
+            metadata["meetingName"] = this.fileInput.current.files[0].name;
+        }
+
         console.log(metadata);
         const metadataPromise = this.getSignedURL(metadata);
 
@@ -195,7 +201,7 @@ export default class MetaFields extends React.Component<{}, inputProps> {
                         </label>
                     </div>
                     <div className="form-group col-md-4">
-                        <label className = "Meta-label font-weight-bold">
+                        <label className = "Meta-label font-weight-bold" >
                             Start Time:
                             {/*<input className = "Meta-input" type="text" value={this.state.startTime} onChange={this.handleChangeStartTime}/>*/}
                             <TimePickers parentCallback={this.handleChangeStartTime}/>
@@ -205,7 +211,7 @@ export default class MetaFields extends React.Component<{}, inputProps> {
                         <label className = "Meta-label font-weight-bold">
                             End Time:
                             {/*<input className = "Meta-input" type="text" value={this.state.endTime} onChange={this.handleChangeEndTime}/>*/}
-                            <TimePickers parentCallback={this.handleChangeEndTime}/>
+                            <TimePickers parentCallback={this.handleChangeEndTime} />
                         </label>
                     </div>
                 </div>
