@@ -64,7 +64,9 @@ export default class MetaFields extends React.Component<{}, inputProps> {
             let extension: string = parts[parts.length - 1].toLowerCase();
             if (extension === "wav" || extension === "mp3") {
                 // @ts-ignore: Object is possibly 'null'.
-                alert(`Selected file - ${this.fileInput.current.files[0].name}`);
+                let fileName = this.fileInput.current.files[0].name;
+                alert(`Selected file - ` + fileName);
+                this.setState({meetingName: fileName})
                 this.uploadToCloud();
                 return true;
             } else {
@@ -78,9 +80,7 @@ export default class MetaFields extends React.Component<{}, inputProps> {
 
 
     uploadToCloud(){
-        // @ts-ignore
         const metadata = {
-            //Stub values
             // @ts-ignore: Object is possibly 'null'.
             contentType: this.fileInput.current.files[0].type,
             organizerUserName: this.state.organizer,
@@ -88,6 +88,7 @@ export default class MetaFields extends React.Component<{}, inputProps> {
             startTime: this.state.startTime+":00",
             endTime: this.state.endTime+":00",
             meetingDate: this.state.meetingDate,
+            attendees: this.state.attendees,
         };
         console.log(metadata);
         const metadataPromise = this.getSignedURL(metadata);
@@ -99,7 +100,7 @@ export default class MetaFields extends React.Component<{}, inputProps> {
             const sendFilePromise = this.sendAudioFile(signedURL);
             sendFilePromise.then((result:any) => {
                 console.log(result);
-                console.log("file sent successfully!");
+                alert("file sent successfully!");
             }).catch((error) => {
                 console.log(`In catch: ${error}`);
                 alert(`User :  ${this.state.organizer} does not exist`);
@@ -211,7 +212,6 @@ export default class MetaFields extends React.Component<{}, inputProps> {
                 <AttendeesComponent parentCallback={this.handleChangeAttendees}></AttendeesComponent>
                 <br/>
                 <input type="file" accept = "audio/*" id="inputFile" ref={this.fileInput} onChange={() => this.handleFileSubmit(this)} />
-
             </form>
         );
     }
