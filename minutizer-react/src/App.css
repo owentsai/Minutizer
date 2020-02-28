@@ -36,6 +36,41 @@ h2 {
   justify-content: center;
   display: flex;
 }
+
+.uploadTab {
+  text-align: center;
+  width: 50%;
+  padding: 340px;
+  border-style: dashed;
+  font-size: 50px;
+  margin: auto;
+  background-color: lightgray;
+}
+.split {
+  margin: 50px;
+  height: 100%;
+  width: 50%;
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  overflow-x: hidden;
+  padding-top: 100px;
+}
+
+.left {
+  left: 0;
+  background-color: #111;
+}
+
+.right {
+  right: 0;
+  background-color: red;
+}
+
+.custom {
+  width: 50px;
+}
+
 /* .App-link {
   color: #61dafb;
 }
