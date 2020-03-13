@@ -1,16 +1,8 @@
 import React from 'react';
-import logo from './logo.svg';
+import logo from '../../logo.svg';
 import AttendeesComponent from "./AttendeesComponent";
-import './MetaFields.css';
 import TimePickers from "./TimePicker";
 import DatePickers from "./DatePicker";
-import DateFnsUtils from '@date-io/date-fns'; // choose your lib
-import {
-    DatePicker,
-    TimePicker,
-    DateTimePicker,
-    MuiPickersUtilsProvider,
-} from '@material-ui/pickers';
 
 interface inputProps {
     organizer: any,
@@ -30,7 +22,7 @@ export default class MetaFields extends React.Component<{}, inputProps> {
             startTime: '',
             endTime: '',
             meetingName: '',
-            meetingDate: '',
+            meetingDate: '2020-01-01',
             attendees: [],
         };
         this.handleChangeOrganizer = this.handleChangeOrganizer.bind(this);
@@ -40,6 +32,9 @@ export default class MetaFields extends React.Component<{}, inputProps> {
         this.handleChangeMeetingName = this.handleChangeMeetingName.bind(this);
         this.handleChangeDate = this.handleChangeDate.bind(this);
         this.handleChangeAttendees = this.handleChangeAttendees.bind(this);
+        this.handleShareholderNameChange = this.handleShareholderNameChange.bind(this);
+        this.handleAddShareholder = this.handleAddShareholder.bind(this);
+        this.handleRemoveShareholder = this.handleRemoveShareholder.bind(this);
     }
 
     handleChangeOrganizer(event: any) {
@@ -69,6 +64,31 @@ export default class MetaFields extends React.Component<{}, inputProps> {
         console.log(this.state.attendees);
     }
 
+
+    handleShareholderNameChange (idx: any, evt: any){
+        const name = evt.target.value;
+        const newShareholders = this.state.attendees.map((shareholder: any, sidx: any) => {
+            if (idx !== sidx) return shareholder;
+            return { ...shareholder, name };
+        });
+        this.setState({ attendees: newShareholders });
+        console.log(this.state.attendees);
+    };
+
+    handleAddShareholder = () =>{
+        this.setState({
+            attendees: this.state.attendees.concat([{ name: "" }])
+        });
+        console.log(this.state.attendees);
+    };
+
+    handleRemoveShareholder(idx: any)  {
+        this.setState({
+            attendees: this.state.attendees.filter((s:any, sidx: any) => idx !== sidx)
+        });
+        console.log(this.state.attendees);
+    };
+
     handleFileSubmit(event: any): boolean{
         try {
             // @ts-ignore: Object is possibly 'null'.
@@ -76,7 +96,8 @@ export default class MetaFields extends React.Component<{}, inputProps> {
             let extension: string = parts[parts.length - 1].toLowerCase();
             if (extension === "wav" || extension === "mp3") {
                 // @ts-ignore: Object is possibly 'null'.
-                alert(`Selected file - ${this.fileInput.current.files[0].name}`);
+                let fileName = this.fileInput.current.files[0].name;
+                alert(`Selected file - ` + fileName);
                 this.uploadToCloud();
                 return true;
             } else {
@@ -84,15 +105,14 @@ export default class MetaFields extends React.Component<{}, inputProps> {
                 return false;
             }
         }catch (e) {
+            console.log(e.message);
             return false;
         }    
     }
 
 
     uploadToCloud(){
-        // @ts-ignore
         const metadata = {
-            //Stub values
             // @ts-ignore: Object is possibly 'null'.
             contentType: this.fileInput.current.files[0].type,
             organizerUserName: this.state.organizer,
@@ -101,6 +121,17 @@ export default class MetaFields extends React.Component<{}, inputProps> {
             endTime: this.state.endTime+":00",
             meetingDate: this.state.meetingDate,
         };
+        console.log(this.state.attendees.length)
+;        if (this.state.attendees.length > 0){
+            metadata["attendees"] = this.state.attendees;
+        }
+        if (!this.state.meetingName){
+            // @ts-ignore
+            this.setState({meetingName: this.fileInput.current.files[0].name});
+            // @ts-ignore
+            metadata["meetingName"] = this.fileInput.current.files[0].name;
+        }
+
         console.log(metadata);
         const metadataPromise = this.getSignedURL(metadata);
 
@@ -111,10 +142,9 @@ export default class MetaFields extends React.Component<{}, inputProps> {
             const sendFilePromise = this.sendAudioFile(signedURL);
             sendFilePromise.then((result:any) => {
                 console.log(result);
-                console.log("file sent successfully!");
+                alert("file sent successfully!");
             }).catch((error) => {
                 console.log(`In catch: ${error}`);
-                alert(`User :  ${this.state.organizer} does not exist`);
             });
         }).catch((error) => {
             console.log(`In catch: ${error}`);
@@ -179,39 +209,51 @@ export default class MetaFields extends React.Component<{}, inputProps> {
         });
     }
     render() {
-        // @ts-ignore
-        // @ts-ignore
         return (
-            <form className = 'metaForm'>
-                <label className="Meta-label">
-                    Meeting Name:
-                    <input className="Meta-input" type="text" value={this.state.meetingName} onChange={this.handleChangeMeetingName} />
-                </label>
-                <label className = "Meta-label">
-                    Meeting Organizer:
-                    <input className = "Meta-input" type="text" value={this.state.organizer} onChange={this.handleChangeOrganizer} />
-                </label>
-                <label className = "Meta-label">
-                    Meeting Date:
-                    {/*<input className = "Meta-input" type="text" value={this.state.endTime} onChange={this.handleChangeEndTime}/>*/}
-                    <DatePickers parentCallback={this.handleChangeDate}/>
+            <form>
+                <div className="form-row mb-3">
+                    <div className="form-group col-md-6">
+                        <label className="Meta-label font-weight-bold">
+                            Meeting File Name:
+                            <input className="Meta-input ml-4" type="text" value={this.state.meetingName} onChange={this.handleChangeMeetingName} />
+                        </label>
+                    </div>
+                    <div className="form-group col-md-6">
+                        <label className = "Meta-label font-weight-bold">
+                            Meeting Organizer:
+                            <input className = "Meta-input ml-4" type="text" value={this.state.organizer} onChange={this.handleChangeOrganizer} />
+                        </label>
+                    </div>
+                </div>
+                <div className="form-row mb-3">
+                    <div className="form-group col-md-4">
+                        <label className = "Meta-label font-weight-bold">
+                            Meeting Date:
+                            {/*<input className = "Meta-input" type="text" value={this.state.endTime} onChange={this.handleChangeEndTime}/>*/}
+                            <DatePickers parentCallback={this.handleChangeDate}/>
+                        </label>
+                    </div>
+                    <div className="form-group col-md-4">
+                        <label className = "Meta-label font-weight-bold" >
+                            Start Time:
+                            {/*<input className = "Meta-input" type="text" value={this.state.startTime} onChange={this.handleChangeStartTime}/>*/}
+                            <TimePickers parentCallback={this.handleChangeStartTime}/>
+                        </label>
+                    </div>
+                    <div className="form-group col-md-4">
+                        <label className = "Meta-label font-weight-bold">
+                            End Time:
+                            {/*<input className = "Meta-input" type="text" value={this.state.endTime} onChange={this.handleChangeEndTime}/>*/}
+                            <TimePickers parentCallback={this.handleChangeEndTime} />
+                        </label>
+                    </div>
+                </div>
 
-                </label>
-                <label className = "Meta-label">
-                    Start Time:
-                    {/*<input className = "Meta-input" type="text" value={this.state.startTime} onChange={this.handleChangeStartTime}/>*/}
-                    <TimePickers parentCallback={this.handleChangeStartTime}/>
-                </label>
-                <label className = "Meta-label">
-                    End Time:
-                    {/*<input className = "Meta-input" type="text" value={this.state.endTime} onChange={this.handleChangeEndTime}/>*/}
-                    <TimePickers parentCallback={this.handleChangeEndTime}/>
-                </label>
-
-                <AttendeesComponent parentCallback={this.handleChangeAttendees}></AttendeesComponent>
+                    <AttendeesComponent parentCallback1={this.handleAddShareholder}
+                                        parentCallback2={this.handleRemoveShareholder}
+                                        parentCallback3={this.handleShareholderNameChange}></AttendeesComponent>
                 <br/>
                 <input type="file" accept = "audio/*" id="inputFile" ref={this.fileInput} onChange={() => this.handleFileSubmit(this)} />
-
             </form>
         );
     }

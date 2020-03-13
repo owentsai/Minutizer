@@ -1,8 +1,10 @@
 import React from 'react';
 import logo from './logo.svg';
-import './MetaFields.css';
-import MetaFields from "./MetaFields";
-import AttendeesComponent from "./AttendeesComponent";
+import './Tabs/upload_tab_files/MetaFields.css';
+import MetaFields from "./Tabs/upload_tab_files/MetaFields";
+import AttendeesComponent from "./Tabs/upload_tab_files/AttendeesComponent";
+import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
+import TextField from '@material-ui/core/TextField';
 
 const App = () => {
   return (

@@ -8,7 +8,6 @@ export default class TimePickers extends React.Component<{parentCallback:any},{t
 
     handleTimeChange(event: any){
         this.props.parentCallback(event.target.value);
-
     }
     render() {
         return (
