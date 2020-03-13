@@ -49,17 +49,21 @@ export default class MetaFields extends React.Component<{}, inputProps> {
         this.setState({meetingDate: childValue});
         console.log(childValue);
     }
+
     handleChangeStartTime(childValue: any) {
         this.setState({startTime: childValue});
         console.log(childValue);
     }
+
     handleChangeEndTime(childValue: any) {
         this.setState({endTime: childValue});
         console.log(childValue);
     }
+
     handleChangeMeetingName(event: any){
         this.setState({meetingName: event.target.value});
     }
+
     handleChangeAttendees(childValue: any){
         this.setState({attendees: childValue});
         console.log(this.state.attendees);
