@@ -1,10 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="9c537477-f9f9-42d8-9cb4-72868604a27c" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Tabs/upload_tab_files/MetaFields.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/Tabs/upload_tab_files/MetaFields.tsx" afterDir="false" />
-    </list>
+    <list default="true" id="9c537477-f9f9-42d8-9cb4-72868604a27c" name="Default Changelist" comment="" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -48,7 +45,7 @@
       <option name="presentableId" value="Default" />
       <updated>1584065269252</updated>
       <workItem from="1584065277603" duration="3953000" />
-      <workItem from="1584139835661" duration="12017000" />
+      <workItem from="1584139835661" duration="12326000" />
     </task>
     <task id="LOCAL-00001" summary="stash">
       <created>1584065373325</created>
@@ -78,7 +75,14 @@
       <option name="project" value="LOCAL" />
       <updated>1584165495231</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="Changed state default values">
+      <created>1584171897551</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1584171897551</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -101,6 +105,7 @@
     <MESSAGE value="stash" />
     <MESSAGE value="Added submit button and toast messages on (un)successful upload" />
     <MESSAGE value="TODO:&#10;-Fix attendees field" />
-    <option name="LAST_COMMIT_MESSAGE" value="TODO:&#10;-Fix attendees field" />
+    <MESSAGE value="Changed state default values" />
+    <option name="LAST_COMMIT_MESSAGE" value="Changed state default values" />
   </component>
 </project>
