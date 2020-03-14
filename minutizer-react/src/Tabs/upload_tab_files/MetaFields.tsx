@@ -38,7 +38,6 @@ export default class MetaFields extends React.Component<{}, inputProps> {
         this.handleFileSubmit = this.handleFileSubmit.bind(this);
         this.handleChangeMeetingName = this.handleChangeMeetingName.bind(this);
         this.handleChangeDate = this.handleChangeDate.bind(this);
-        this.handleChangeAttendees = this.handleChangeAttendees.bind(this);
         this.handleShareholderNameChange = this.handleShareholderNameChange.bind(this);
         this.handleAddShareholder = this.handleAddShareholder.bind(this);
         this.handleRemoveShareholder = this.handleRemoveShareholder.bind(this);
@@ -66,34 +65,26 @@ export default class MetaFields extends React.Component<{}, inputProps> {
         this.setState({meetingName: event.target.value});
     }
 
-    handleChangeAttendees(childValue: any){
-        this.setState({attendees: childValue});
-        console.log(this.state.attendees);
-    }
-
-
     handleShareholderNameChange (idx: any, evt: any){
-        const name = evt.target.value;
+        const name:string = evt.target.value;
         const newShareholders = this.state.attendees.map((shareholder: any, sidx: any) => {
-            if (idx !== sidx) return shareholder;
+            if (idx !== sidx)
+                return shareholder;
             return { ...shareholder, name };
         });
         this.setState({ attendees: newShareholders });
-        console.log(this.state.attendees);
     };
 
     handleAddShareholder = () =>{
         this.setState({
             attendees: this.state.attendees.concat([{ name: "" }])
         });
-        console.log(this.state.attendees);
     };
 
     handleRemoveShareholder(idx: any)  {
         this.setState({
             attendees: this.state.attendees.filter((s:any, sidx: any) => idx !== sidx)
         });
-        console.log(this.state.attendees);
     };
 
     handleFileSubmit(event: any): boolean{
@@ -139,7 +130,7 @@ export default class MetaFields extends React.Component<{}, inputProps> {
         };
         console.log(this.state.attendees.length);
         if (this.state.attendees.length > 0){
-            metadata["attendees"] = this.state.attendees;
+            metadata["attendees"] = this.convertToStringArray(this.state.attendees);
         }
         if (!this.state.meetingName){
             // @ts-ignore
@@ -175,6 +166,15 @@ export default class MetaFields extends React.Component<{}, inputProps> {
             console.log(`In catch: ${error}`);
         });
 
+    }
+
+    private convertToStringArray(attendees: any):string[] {
+        let attendeeStringArr: string[] = [];
+        for (let attendee of attendees){
+            attendeeStringArr.push(attendee.name);
+        }
+        console.log(attendeeStringArr);
+        return attendeeStringArr;
     }
 
     sendAudioFile(signedURL: any) {
