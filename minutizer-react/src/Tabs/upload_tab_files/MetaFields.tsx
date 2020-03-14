@@ -26,8 +26,8 @@ export default class MetaFields extends React.Component<{}, inputProps> {
         super(props);
         this.state = {
             organizer: '',
-            startTime: '',
-            endTime: '',
+            startTime: '00:00',
+            endTime: '00:00',
             meetingName: '',
             meetingDate: '2020-01-01',
             attendees: [],
