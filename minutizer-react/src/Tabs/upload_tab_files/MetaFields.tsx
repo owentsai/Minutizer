@@ -3,6 +3,13 @@ import logo from '../../logo.svg';
 import AttendeesComponent from "./AttendeesComponent";
 import TimePickers from "./TimePicker";
 import DatePickers from "./DatePicker";
+import { ToastContainer, toast } from 'react-toastify';
+import Icon from '@material-ui/core/Icon';
+import CloudUploadIcon from '@material-ui/icons/CloudUpload';
+import Button from '@material-ui/core/Button';
+import 'react-toastify/dist/ReactToastify.css';
+
+toast.configure();
 
 interface inputProps {
     organizer: any,
@@ -91,6 +98,7 @@ export default class MetaFields extends React.Component<{}, inputProps> {
 
     handleFileSubmit(event: any): boolean{
         try {
+
             // @ts-ignore: Object is possibly 'null'.
             let parts: string[] = this.fileInput.current.files[0].name.split('.');
             let extension: string = parts[parts.length - 1].toLowerCase();
@@ -101,7 +109,15 @@ export default class MetaFields extends React.Component<{}, inputProps> {
                 this.uploadToCloud();
                 return true;
             } else {
-                alert('Invalid file. Only .mp3 or .wav files accepted');
+                toast.error(<div>FILE NOT SENT!<br />Only .mp3 or .wav files accepted</div>, {
+                    position: "top-center",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                });
+                this.resetForm()
                 return false;
             }
         }catch (e) {
@@ -121,8 +137,8 @@ export default class MetaFields extends React.Component<{}, inputProps> {
             endTime: this.state.endTime+":00",
             meetingDate: this.state.meetingDate,
         };
-        console.log(this.state.attendees.length)
-;        if (this.state.attendees.length > 0){
+        console.log(this.state.attendees.length);
+        if (this.state.attendees.length > 0){
             metadata["attendees"] = this.state.attendees;
         }
         if (!this.state.meetingName){
@@ -133,6 +149,7 @@ export default class MetaFields extends React.Component<{}, inputProps> {
         }
 
         console.log(metadata);
+        //Pass the metadata of the file to cloud function to retrieve a signed URL where the file will be uploaded
         const metadataPromise = this.getSignedURL(metadata);
 
         let signedURL;
@@ -142,7 +159,15 @@ export default class MetaFields extends React.Component<{}, inputProps> {
             const sendFilePromise = this.sendAudioFile(signedURL);
             sendFilePromise.then((result:any) => {
                 console.log(result);
-                alert("file sent successfully!");
+                toast.success('File Upload Successful!', {
+                    position: "top-center",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                });
+                this.resetForm();
             }).catch((error) => {
                 console.log(`In catch: ${error}`);
             });
@@ -210,7 +235,7 @@ export default class MetaFields extends React.Component<{}, inputProps> {
     }
     render() {
         return (
-            <form>
+            <form id="uploadAudioForm">
                 <div className="form-row mb-3">
                     <div className="form-group col-md-6">
                         <label className="Meta-label font-weight-bold">
@@ -253,8 +278,25 @@ export default class MetaFields extends React.Component<{}, inputProps> {
                                         parentCallback2={this.handleRemoveShareholder}
                                         parentCallback3={this.handleShareholderNameChange}></AttendeesComponent>
                 <br/>
-                <input type="file" accept = "audio/*" id="inputFile" ref={this.fileInput} onChange={() => this.handleFileSubmit(this)} />
+                <div className="form-row mb-3 mt-4">
+                    <input className="chooseFile" type="file" accept = "audio/*" id="inputFile" ref={this.fileInput}/>
+                </div>
+                <div className="form-row mt-5">
+                    <Button
+                        variant="contained"
+                        color="default"
+                        startIcon={<CloudUploadIcon />}
+                        onClick={() => this.handleFileSubmit(this)}
+                    >
+                        Upload file
+                    </Button>
+                </div>
             </form>
         );
+    }
+
+    private resetForm() {
+        // @ts-ignore
+        document.getElementById("uploadAudioForm").reset();
     }
 }
