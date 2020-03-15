@@ -361,14 +361,13 @@ export default class MetaFields extends React.Component<{}, inputProps> {
         // @ts-ignore
         document.getElementById("organizerName").value = "";
 
-        this.state = {
-            organizer: '',
+        this.setState({organizer: '',
             startTime: '00:00',
             endTime: '00:00',
             meetingName: '',
             meetingDate: '2020-01-01',
             attendees: [],
-        };
+        });
 
         // @ts-ignore
         this.attendeesComponent.current.resetState();
