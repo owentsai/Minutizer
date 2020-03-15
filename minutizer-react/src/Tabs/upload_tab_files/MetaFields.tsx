@@ -1,8 +1,6 @@
 import React from 'react';
 import logo from '../../logo.svg';
 import AttendeesComponent from "./AttendeesComponent";
-import TimePickers from "./TimePicker";
-import DatePickers from "./DatePicker";
 import { ToastContainer, toast } from 'react-toastify';
 import Icon from '@material-ui/core/Icon';
 import CloudUploadIcon from '@material-ui/icons/CloudUpload';
