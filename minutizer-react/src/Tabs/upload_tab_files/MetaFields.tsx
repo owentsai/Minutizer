@@ -1,8 +1,8 @@
 import React from 'react';
-import logo from '../../logo.svg';
 import AttendeesComponent from "./AttendeesComponent";
-import { ToastContainer, toast } from 'react-toastify';
+import {ToastContainer, toast, Bounce} from 'react-toastify';
 import Icon from '@material-ui/core/Icon';
+import { css } from 'glamor';
 import CloudUploadIcon from '@material-ui/icons/CloudUpload';
 import Button from '@material-ui/core/Button';
 import 'react-toastify/dist/ReactToastify.css';
@@ -18,10 +18,11 @@ interface inputProps {
     meetingDate:any,
     attendees:any
 }
+
 export default class MetaFields extends React.Component<{}, inputProps> {
     private fileInput = React.createRef<HTMLInputElement>();
     private attendeesComponent = React.createRef<AttendeesComponent>();
-
+    private toastId:any = null;
     constructor(props: any) {
         super(props);
         this.state = {
@@ -162,22 +163,36 @@ export default class MetaFields extends React.Component<{}, inputProps> {
         console.log(metadata);
         //Pass the metadata of the file to cloud function to retrieve a signed URL where the file will be uploaded
         const metadataPromise = this.getSignedURL(metadata);
-
+        this.toastId = toast("Uploading in progress, please wait...",  {
+            position: "top-center",
+            autoClose: false,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+        });
         let signedURL;
         metadataPromise.then((result:any) => {
             // console.log(result);
             signedURL = result;
             const sendFilePromise = this.sendAudioFile(signedURL);
+            let toastRef = this.toastId;
             sendFilePromise.then((result:any) => {
-                // console.log(result);
-                toast.success('File Upload Successful!', {
+
+                toast.update(toastRef, {
+                    render: 'File Upload Successful!',
+                    type: toast.TYPE.SUCCESS,
+                    className: css({
+                        transform: "rotateY(360deg)",
+                        transition: "transform 0.6s"
+                    }),
                     position: "top-center",
                     autoClose: 5000,
                     hideProgressBar: false,
                     closeOnClick: true,
                     pauseOnHover: true,
                     draggable: true,
-                });
+                })
                 this.resetForm();
             }).catch((error) => {
                 toast.error(<div>FILE NOT SENT!<br />Invalid field in metadata</div>, {
