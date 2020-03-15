@@ -8,6 +8,7 @@ import Icon from '@material-ui/core/Icon';
 import CloudUploadIcon from '@material-ui/icons/CloudUpload';
 import Button from '@material-ui/core/Button';
 import 'react-toastify/dist/ReactToastify.css';
+import TextField from "@material-ui/core/TextField";
 
 toast.configure();
 
@@ -46,19 +47,41 @@ export default class MetaFields extends React.Component<{}, inputProps> {
     handleChangeOrganizer(event: any) {
         this.setState({organizer: event.target.value});
     }
-    handleChangeDate(childValue: any) {
-        this.setState({meetingDate: childValue});
-        console.log(childValue);
+    handleChangeDate(event: any) {
+        let date = event.target.value;
+        let dateArr = date.split("-");
+        let userDate = new Date(dateArr[0],dateArr[1] - 1,dateArr[2]);
+        console.log(userDate);
+        let currentDate = new Date();
+        console.log(currentDate);
+        if (userDate > currentDate){
+            toast.error(<div>INVALID DATE SELECTED!</div>, {
+                position: "top-center",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+            });
+            //Reset to default date
+            this.setState({meetingDate: '2020-01-01'});
+            // @ts-ignore
+            document.getElementById("date").value = '2020-01-01';
+        }
+        else{
+            this.setState({meetingDate: date});
+        }
+        // console.log(childValue);
     }
 
-    handleChangeStartTime(childValue: any) {
-        this.setState({startTime: childValue});
-        console.log(childValue);
+    handleChangeStartTime(event: any) {
+        this.setState({startTime: event.target.value});
+        // console.log(childValue);
     }
 
-    handleChangeEndTime(childValue: any) {
-        this.setState({endTime: childValue});
-        console.log(childValue);
+    handleChangeEndTime(event: any) {
+        this.setState({endTime: event.target.value});
+        // console.log(childValue);
     }
 
     handleChangeMeetingName(event: any){
@@ -89,14 +112,11 @@ export default class MetaFields extends React.Component<{}, inputProps> {
 
     handleFileSubmit(event: any): boolean{
         try {
-
             // @ts-ignore: Object is possibly 'null'.
             let parts: string[] = this.fileInput.current.files[0].name.split('.');
             let extension: string = parts[parts.length - 1].toLowerCase();
             if (extension === "wav" || extension === "mp3") {
                 // @ts-ignore: Object is possibly 'null'.
-                let fileName = this.fileInput.current.files[0].name;
-                alert(`Selected file - ` + fileName);
                 this.uploadToCloud();
                 return true;
             } else {
@@ -108,7 +128,8 @@ export default class MetaFields extends React.Component<{}, inputProps> {
                     pauseOnHover: true,
                     draggable: true,
                 });
-                this.resetForm()
+                // @ts-ignore
+                document.getElementById("inputFile").value = "";
                 return false;
             }
         }catch (e) {
@@ -128,7 +149,7 @@ export default class MetaFields extends React.Component<{}, inputProps> {
             endTime: this.state.endTime+":00",
             meetingDate: this.state.meetingDate,
         };
-        console.log(this.state.attendees.length);
+        // console.log(this.state.attendees.length);
         if (this.state.attendees.length > 0){
             metadata["attendees"] = this.convertToStringArray(this.state.attendees);
         }
@@ -145,11 +166,11 @@ export default class MetaFields extends React.Component<{}, inputProps> {
 
         let signedURL;
         metadataPromise.then((result:any) => {
-            console.log(result);
+            // console.log(result);
             signedURL = result;
             const sendFilePromise = this.sendAudioFile(signedURL);
             sendFilePromise.then((result:any) => {
-                console.log(result);
+                // console.log(result);
                 toast.success('File Upload Successful!', {
                     position: "top-center",
                     autoClose: 5000,
@@ -160,7 +181,14 @@ export default class MetaFields extends React.Component<{}, inputProps> {
                 });
                 this.resetForm();
             }).catch((error) => {
-                console.log(`In catch: ${error}`);
+                toast.error(<div>FILE NOT SENT!<br />Invalid field in metadata</div>, {
+                    position: "top-center",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                });
             });
         }).catch((error) => {
             console.log(`In catch: ${error}`);
@@ -173,7 +201,7 @@ export default class MetaFields extends React.Component<{}, inputProps> {
         for (let attendee of attendees){
             attendeeStringArr.push(attendee.name);
         }
-        console.log(attendeeStringArr);
+        // console.log(attendeeStringArr);
         return attendeeStringArr;
     }
 
@@ -240,13 +268,13 @@ export default class MetaFields extends React.Component<{}, inputProps> {
                     <div className="form-group col-md-6">
                         <label className="Meta-label font-weight-bold">
                             Meeting File Name:
-                            <input className="Meta-input ml-4" type="text" value={this.state.meetingName} onChange={this.handleChangeMeetingName} />
+                            <input id="meetingName" className="Meta-input ml-4" type="text" value={this.state.meetingName} onChange={this.handleChangeMeetingName} />
                         </label>
                     </div>
                     <div className="form-group col-md-6">
                         <label className = "Meta-label font-weight-bold">
                             Meeting Organizer:
-                            <input className = "Meta-input ml-4" type="text" value={this.state.organizer} onChange={this.handleChangeOrganizer} />
+                            <input id="organizerName" className = "Meta-input ml-4" type="text" value={this.state.organizer} onChange={this.handleChangeOrganizer} />
                         </label>
                     </div>
                 </div>
@@ -254,29 +282,57 @@ export default class MetaFields extends React.Component<{}, inputProps> {
                     <div className="form-group col-md-4">
                         <label className = "Meta-label font-weight-bold">
                             Meeting Date:
-                            {/*<input className = "Meta-input" type="text" value={this.state.endTime} onChange={this.handleChangeEndTime}/>*/}
-                            <DatePickers parentCallback={this.handleChangeDate}/>
+                            <br/>
+                            <TextField
+                                id="date"
+                                label="Date"
+                                type="date"
+                                defaultValue="2020-01-01"
+                                InputLabelProps={{
+                                    shrink: true,
+                                }}
+                                onChange={this.handleChangeDate.bind(this)}
+                            />
                         </label>
                     </div>
                     <div className="form-group col-md-4">
                         <label className = "Meta-label font-weight-bold" >
                             Start Time:
-                            {/*<input className = "Meta-input" type="text" value={this.state.startTime} onChange={this.handleChangeStartTime}/>*/}
-                            <TimePickers parentCallback={this.handleChangeStartTime}/>
+                            <br/>
+                            <TextField
+                                id="startTime"
+                                label="Time"
+                                type="time"
+                                defaultValue="00:00:00"
+                                InputLabelProps={{
+                                    shrink: true,
+                                }}
+                                onChange = {this.handleChangeStartTime.bind(this)}
+                            />
                         </label>
                     </div>
                     <div className="form-group col-md-4">
                         <label className = "Meta-label font-weight-bold">
                             End Time:
-                            {/*<input className = "Meta-input" type="text" value={this.state.endTime} onChange={this.handleChangeEndTime}/>*/}
-                            <TimePickers parentCallback={this.handleChangeEndTime} />
+                            <br/>
+                            <TextField
+                                id="endTime"
+                                label="Time"
+                                type="time"
+                                defaultValue="00:00:00"
+                                InputLabelProps={{
+                                    shrink: true,
+                                }}
+                                onChange = {this.handleChangeEndTime.bind(this)}
+                            />
                         </label>
                     </div>
                 </div>
 
                     <AttendeesComponent parentCallback1={this.handleAddShareholder}
                                         parentCallback2={this.handleRemoveShareholder}
-                                        parentCallback3={this.handleShareholderNameChange}></AttendeesComponent>
+                                        parentCallback3={this.handleShareholderNameChange}
+                    ></AttendeesComponent>
                 <br/>
                 <div className="form-row mb-3 mt-4">
                     <input className="chooseFile" type="file" accept = "audio/*" id="inputFile" ref={this.fileInput}/>
@@ -298,5 +354,18 @@ export default class MetaFields extends React.Component<{}, inputProps> {
     private resetForm() {
         // @ts-ignore
         document.getElementById("uploadAudioForm").reset();
+        // @ts-ignore
+        document.getElementById("meetingName").value = "";
+        // @ts-ignore
+        document.getElementById("organizerName").value = "";
+
+        this.state = {
+            organizer: '',
+            startTime: '00:00',
+            endTime: '00:00',
+            meetingName: '',
+            meetingDate: '2020-01-01',
+            attendees: [],
+        };
     }
 }

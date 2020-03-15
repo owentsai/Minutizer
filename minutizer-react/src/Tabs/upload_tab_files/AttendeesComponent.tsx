@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import './AttendeesComponent.css';
 
-export default class IncorporationForm extends React.Component<{parentCallback1:any,parentCallback2:any,parentCallback3:any}, {attendees: any}> {
+export default class AttendeesComponent extends React.Component<{parentCallback1:any,parentCallback2:any,parentCallback3:any}, {attendees: any}> {
     constructor(props: any) {
         super(props);
         this.state = {
