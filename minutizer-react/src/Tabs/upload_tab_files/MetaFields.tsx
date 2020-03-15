@@ -22,6 +22,7 @@ interface inputProps {
 }
 export default class MetaFields extends React.Component<{}, inputProps> {
     private fileInput = React.createRef<HTMLInputElement>();
+    private attendeesComponent = React.createRef<AttendeesComponent>();
 
     constructor(props: any) {
         super(props);
@@ -39,9 +40,9 @@ export default class MetaFields extends React.Component<{}, inputProps> {
         this.handleFileSubmit = this.handleFileSubmit.bind(this);
         this.handleChangeMeetingName = this.handleChangeMeetingName.bind(this);
         this.handleChangeDate = this.handleChangeDate.bind(this);
-        this.handleShareholderNameChange = this.handleShareholderNameChange.bind(this);
-        this.handleAddShareholder = this.handleAddShareholder.bind(this);
-        this.handleRemoveShareholder = this.handleRemoveShareholder.bind(this);
+        this.handleAttendeeNameChange = this.handleAttendeeNameChange.bind(this);
+        this.handleAddAttendee = this.handleAddAttendee.bind(this);
+        this.handleRemoveAttendee = this.handleRemoveAttendee.bind(this);
     }
 
     handleChangeOrganizer(event: any) {
@@ -88,7 +89,7 @@ export default class MetaFields extends React.Component<{}, inputProps> {
         this.setState({meetingName: event.target.value});
     }
 
-    handleShareholderNameChange (idx: any, evt: any){
+    handleAttendeeNameChange (idx: any, evt: any){
         const name:string = evt.target.value;
         const newShareholders = this.state.attendees.map((shareholder: any, sidx: any) => {
             if (idx !== sidx)
@@ -98,13 +99,13 @@ export default class MetaFields extends React.Component<{}, inputProps> {
         this.setState({ attendees: newShareholders });
     };
 
-    handleAddShareholder = () =>{
+    handleAddAttendee = () =>{
         this.setState({
             attendees: this.state.attendees.concat([{ name: "" }])
         });
     };
 
-    handleRemoveShareholder(idx: any)  {
+    handleRemoveAttendee(idx: any)  {
         this.setState({
             attendees: this.state.attendees.filter((s:any, sidx: any) => idx !== sidx)
         });
@@ -329,9 +330,10 @@ export default class MetaFields extends React.Component<{}, inputProps> {
                     </div>
                 </div>
 
-                    <AttendeesComponent parentCallback1={this.handleAddShareholder}
-                                        parentCallback2={this.handleRemoveShareholder}
-                                        parentCallback3={this.handleShareholderNameChange}
+                    <AttendeesComponent parentCallback1={this.handleAddAttendee}
+                                        parentCallback2={this.handleRemoveAttendee}
+                                        parentCallback3={this.handleAttendeeNameChange}
+                                        ref={this.attendeesComponent}
                     ></AttendeesComponent>
                 <br/>
                 <div className="form-row mb-3 mt-4">
@@ -367,5 +369,8 @@ export default class MetaFields extends React.Component<{}, inputProps> {
             meetingDate: '2020-01-01',
             attendees: [],
         };
+
+        // @ts-ignore
+        this.attendeesComponent.current.resetState();
     }
 }

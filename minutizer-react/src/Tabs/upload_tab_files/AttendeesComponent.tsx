@@ -9,7 +9,18 @@ export default class AttendeesComponent extends React.Component<{parentCallback1
             attendees: []
         };
     }
-
+    resetState(){
+        for (let i in this.state.attendees){
+            this.handleRemoveShareholder(0);
+        }
+        this.state = {
+            attendees: []
+        };
+        console.log("reset in A.C.");
+        // @ts-ignore
+        document.getElementById("attendeeForm").reset();
+        this.render.bind(this);
+    }
     handleShareholderNameChange (idx: any, evt: any){
         const name = evt.target.value;
         const newShareholders = this.state.attendees.map((shareholder: any, sidx: any) => {
@@ -28,6 +39,7 @@ export default class AttendeesComponent extends React.Component<{parentCallback1
     };
 
     handleRemoveShareholder(idx: any)  {
+        console.log(idx);
         this.setState({
             attendees: this.state.attendees.filter((s:any, sidx: any) => idx !== sidx)
         });
@@ -36,7 +48,7 @@ export default class AttendeesComponent extends React.Component<{parentCallback1
 
     render() {
         return (
-            <form className = "AttendeeForm">
+            <form className = "AttendeeForm" id="attendeeForm">
 
                 <label className="Meta-label font-weight-bold d-block">Attendees</label>
 
