@@ -104,11 +104,11 @@ class VoiceRegisterTab extends Component {
                     mimeType="audio/flac"/>
                     {!this.state.record ?
                     <div className="d-inline-flex flex-column align-items-center">
-                    <button style={{backgroundColor: '#00000000', borderStyle: 'none'}} onClick={this.startRecording} type="button"><img src={require('./microphone_icon.png')} width='60' height='60' /></button>
+                    <button style={{backgroundColor: '#00000000', borderStyle: 'none'}} onClick={this.startRecording} type="button"><img src={require('./icons/microphone_icon.png')} width='60' height='60' /></button>
                     <span>Start</span> 
                     </div> :
                     <div className="d-inline-flex flex-column align-items-center">
-                    <button style={{backgroundColor: '#00000000', borderStyle: 'none'}} onClick={this.stopRecording} type="button"><img src={require('./stop_icon.png')} width='60' height='60' /></button>
+                    <button style={{backgroundColor: '#00000000', borderStyle: 'none'}} onClick={this.stopRecording} type="button"><img src={require('./icons/stop_icon.png')} width='60' height='60' /></button>
                     <span>Stop and Save</span> 
                     </div> }
                     <span>Click start and read out loud the following phrases, then click stop to register voice</span>
