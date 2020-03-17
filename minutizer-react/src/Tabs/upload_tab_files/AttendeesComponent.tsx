@@ -1,43 +1,53 @@
 import React from "react";
-import ReactDOM from "react-dom";
 import './AttendeesComponent.css';
 
-export default class IncorporationForm extends React.Component<{parentCallback:any}, {name: any, attendees: any}> {
+export default class AttendeesComponent extends React.Component<{parentCallback1:any,parentCallback2:any,parentCallback3:any}, {attendees: any}> {
     constructor(props: any) {
         super(props);
         this.state = {
-            name: "",
             attendees: []
         };
     }
-
+    resetState(){
+        for (let i in this.state.attendees){
+            this.handleRemoveShareholder(0);
+        }
+        this.state = {
+            attendees: []
+        };
+        console.log("reset in A.C.");
+        // @ts-ignore
+        document.getElementById("attendeeForm").reset();
+        this.render.bind(this);
+    }
     handleShareholderNameChange (idx: any, evt: any){
+        const name = evt.target.value;
         const newShareholders = this.state.attendees.map((shareholder: any, sidx: any) => {
             if (idx !== sidx) return shareholder;
-            return { ...shareholder, name: evt.target.value };
+            return { ...shareholder, name };
         });
-
         this.setState({ attendees: newShareholders });
-        this.props.parentCallback(this.state.attendees);
+        this.props.parentCallback3(idx,evt);
     };
 
-    handleAddShareholder = () => {
+    handleAddShareholder = () =>{
         this.setState({
             attendees: this.state.attendees.concat([{ name: "" }])
         });
-        this.props.parentCallback(this.state.attendees);
+        this.props.parentCallback1();
     };
 
     handleRemoveShareholder(idx: any)  {
+        console.log(idx);
         this.setState({
             attendees: this.state.attendees.filter((s:any, sidx: any) => idx !== sidx)
         });
-        this.props.parentCallback(this.state.attendees);
+        this.props.parentCallback2(idx);
     };
 
     render() {
         return (
-            <form className = "AttendeeForm">
+            <form className = "AttendeeForm" id="attendeeForm">
 
                 <label className="Meta-label font-weight-bold d-block">Attendees</label>
 
@@ -61,7 +71,7 @@ export default class IncorporationForm extends React.Component<{parentCallback:a
                 ))}
                 <button
                     type="button"
-                    onClick={this.handleAddShareholder}
+                    onClick={this.handleAddShareholder.bind(this)}
                     className="small bg-success"
                 >
                     Add Attendee

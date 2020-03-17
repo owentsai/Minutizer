@@ -1,8 +1,13 @@
 import React from 'react';
-import logo from '../../logo.svg';
 import AttendeesComponent from "./AttendeesComponent";
-import TimePickers from "./TimePicker";
-import DatePickers from "./DatePicker";
+import { toast } from 'react-toastify';
+import { css } from 'glamor';
+import CloudUploadIcon from '@material-ui/icons/CloudUpload';
+import Button from '@material-ui/core/Button';
+import 'react-toastify/dist/ReactToastify.css';
+import TextField from "@material-ui/core/TextField";
+
+toast.configure();
 
 interface inputProps {
     organizer: any,
@@ -12,15 +17,17 @@ interface inputProps {
     meetingDate:any,
     attendees:any
 }
+
 export default class MetaFields extends React.Component<{}, inputProps> {
     private fileInput = React.createRef<HTMLInputElement>();
-
+    private attendeesComponent = React.createRef<AttendeesComponent>();
+    private toastId:any = null;
     constructor(props: any) {
         super(props);
         this.state = {
             organizer: '',
-            startTime: '',
-            endTime: '',
+            startTime: '00:00',
+            endTime: '00:00',
             meetingName: '',
             meetingDate: '2020-01-01',
             attendees: [],
@@ -31,31 +38,76 @@ export default class MetaFields extends React.Component<{}, inputProps> {
         this.handleFileSubmit = this.handleFileSubmit.bind(this);
         this.handleChangeMeetingName = this.handleChangeMeetingName.bind(this);
         this.handleChangeDate = this.handleChangeDate.bind(this);
-        this.handleChangeAttendees = this.handleChangeAttendees.bind(this);
+        this.handleAttendeeNameChange = this.handleAttendeeNameChange.bind(this);
+        this.handleAddAttendee = this.handleAddAttendee.bind(this);
+        this.handleRemoveAttendee = this.handleRemoveAttendee.bind(this);
     }
 
     handleChangeOrganizer(event: any) {
         this.setState({organizer: event.target.value});
     }
-    handleChangeDate(childValue: any) {
-        this.setState({meetingDate: childValue});
-        console.log(childValue);
+    handleChangeDate(event: any) {
+        let date = event.target.value;
+        let dateArr = date.split("-");
+        let userDate = new Date(dateArr[0],dateArr[1] - 1,dateArr[2]);
+        console.log(userDate);
+        let currentDate = new Date();
+        console.log(currentDate);
+        if (userDate > currentDate){
+            toast.error(<div>INVALID DATE SELECTED!</div>, {
+                position: "top-center",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+            });
+            //Reset to default date
+            this.setState({meetingDate: '2020-01-01'});
+            // @ts-ignore
+            document.getElementById("date").value = '2020-01-01';
+        }
+        else{
+            this.setState({meetingDate: date});
+        }
+        // console.log(childValue);
     }
-    handleChangeStartTime(childValue: any) {
-        this.setState({startTime: childValue});
-        console.log(childValue);
+
+    handleChangeStartTime(event: any) {
+        this.setState({startTime: event.target.value});
+        // console.log(childValue);
     }
-    handleChangeEndTime(childValue: any) {
-        this.setState({endTime: childValue});
-        console.log(childValue);
+
+    handleChangeEndTime(event: any) {
+        this.setState({endTime: event.target.value});
+        // console.log(childValue);
     }
+
     handleChangeMeetingName(event: any){
         this.setState({meetingName: event.target.value});
     }
-    handleChangeAttendees(childValue: any){
-        this.setState({attendees: childValue});
-        console.log(this.state.attendees);
-    }
+
+    handleAttendeeNameChange (idx: any, evt: any){
+        const name:string = evt.target.value;
+        const newShareholders = this.state.attendees.map((shareholder: any, sidx: any) => {
+            if (idx !== sidx)
+                return shareholder;
+            return { ...shareholder, name };
+        });
+        this.setState({ attendees: newShareholders });
+    };
+
+    handleAddAttendee = () =>{
+        this.setState({
+            attendees: this.state.attendees.concat([{ name: "" }])
+        });
+    };
+
+    handleRemoveAttendee(idx: any)  {
+        this.setState({
+            attendees: this.state.attendees.filter((s:any, sidx: any) => idx !== sidx)
+        });
+    };
 
     handleFileSubmit(event: any): boolean{
         try {
@@ -63,23 +115,28 @@ export default class MetaFields extends React.Component<{}, inputProps> {
             let parts: string[] = this.fileInput.current.files[0].name.split('.');
             let extension: string = parts[parts.length - 1].toLowerCase();
             if (extension === "wav" || extension === "mp3") {
-                // @ts-ignore: Object is possibly 'null'.
-                let fileName = this.fileInput.current.files[0].name;
-                alert(`Selected file - ` + fileName);
-                this.setState({meetingName: fileName});
-                this.uploadToCloud();
-                return true;
+                return this.uploadToCloud();
             } else {
-                alert('Invalid file. Only .mp3 or .wav files accepted');
+                toast.error(<div>FILE NOT SENT!<br />Only .mp3 or .wav files accepted</div>, {
+                    position: "top-center",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                });
+                // @ts-ignore
+                document.getElementById("inputFile").value = "";
                 return false;
             }
         }catch (e) {
+            console.log(e.message);
             return false;
         }    
     }
 
 
-    uploadToCloud(){
+    uploadToCloud(): boolean{
         const metadata = {
             // @ts-ignore: Object is possibly 'null'.
             contentType: this.fileInput.current.files[0].type,
@@ -89,28 +146,83 @@ export default class MetaFields extends React.Component<{}, inputProps> {
             endTime: this.state.endTime+":00",
             meetingDate: this.state.meetingDate,
         };
-        console.log(this.state.attendees.length)
-;        if (this.state.attendees.length > 0){
-            metadata["attendees"] = this.state.attendees;
+        // console.log(this.state.attendees.length);
+        if (this.state.attendees.length > 0){
+            metadata["attendees"] = this.convertToStringArray(this.state.attendees);
         }
-        console.log(metadata);
-        const metadataPromise = this.getSignedURL(metadata);
+        if (!this.state.meetingName){
+            // @ts-ignore
+            this.setState({meetingName: this.fileInput.current.files[0].name});
+            // @ts-ignore
+            metadata["meetingName"] = this.fileInput.current.files[0].name;
+        }
 
+        console.log(metadata);
+        this.toastId = toast("Uploading in progress, please wait...",  {
+            position: "top-center",
+            autoClose: false,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+        });
+
+        //Pass the metadata of the file to cloud function to retrieve a signed URL where the file will be uploaded
+        const metadataPromise = this.getSignedURL(metadata);
         let signedURL;
         metadataPromise.then((result:any) => {
-            console.log(result);
             signedURL = result;
             const sendFilePromise = this.sendAudioFile(signedURL);
+            let toastRef = this.toastId;
             sendFilePromise.then((result:any) => {
-                console.log(result);
-                alert("file sent successfully!");
+                toast.update(toastRef, {
+                    render: 'File Upload Successful!',
+                    type: toast.TYPE.SUCCESS,
+                    className: css({
+                        transform: "rotateY(360deg)",
+                        transition: "transform 0.6s"
+                    }),
+                    position: "top-center",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                });
+                this.resetForm();
+                return true;
             }).catch((error) => {
-                console.log(`In catch: ${error}`);
+                //Not yet able to distinguish which username is invalid (not in the system)
+                toast.update(toastRef, {
+                    render: <div>FILE NOT SENT!<br />Invalid username in metadata</div>,
+                    type: toast.TYPE.ERROR,
+                    className: css({
+                        transform: "rotateY(360deg)",
+                        transition: "transform 0.6s"
+                    }),
+                    position: "top-center",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                });
+                this.resetForm();
+                return false;
             });
         }).catch((error) => {
             console.log(`In catch: ${error}`);
         });
+        return false;
+    }
 
+    private convertToStringArray(attendees: any):string[] {
+        let attendeeStringArr: string[] = [];
+        for (let attendee of attendees){
+            attendeeStringArr.push(attendee.name);
+        }
+        // console.log(attendeeStringArr);
+        return attendeeStringArr;
     }
 
     sendAudioFile(signedURL: any) {
@@ -163,7 +275,7 @@ export default class MetaFields extends React.Component<{}, inputProps> {
                 fulfill(request.response);
             };
             request.onerror = function () {
-                reject('The request failed')
+                reject('The request failed');
             };
 
             request.send(JSON.stringify(metadata));
@@ -171,18 +283,18 @@ export default class MetaFields extends React.Component<{}, inputProps> {
     }
     render() {
         return (
-            <form>
+            <form id="uploadAudioForm">
                 <div className="form-row mb-3">
                     <div className="form-group col-md-6">
                         <label className="Meta-label font-weight-bold">
                             Meeting File Name:
-                            <input className="Meta-input ml-4" type="text" value={this.state.meetingName} onChange={this.handleChangeMeetingName} />
+                            <input id="meetingName" className="Meta-input ml-4" type="text" value={this.state.meetingName} onChange={this.handleChangeMeetingName} />
                         </label>
                     </div>
                     <div className="form-group col-md-6">
                         <label className = "Meta-label font-weight-bold">
                             Meeting Organizer:
-                            <input className = "Meta-input ml-4" type="text" value={this.state.organizer} onChange={this.handleChangeOrganizer} />
+                            <input id="organizerName" className = "Meta-input ml-4" type="text" value={this.state.organizer} onChange={this.handleChangeOrganizer} />
                         </label>
                     </div>
                 </div>
@@ -190,31 +302,93 @@ export default class MetaFields extends React.Component<{}, inputProps> {
                     <div className="form-group col-md-4">
                         <label className = "Meta-label font-weight-bold">
                             Meeting Date:
-                            {/*<input className = "Meta-input" type="text" value={this.state.endTime} onChange={this.handleChangeEndTime}/>*/}
-                            <DatePickers parentCallback={this.handleChangeDate}/>
+                            <br/>
+                            <TextField
+                                id="date"
+                                label="Date"
+                                type="date"
+                                defaultValue="2020-01-01"
+                                InputLabelProps={{
+                                    shrink: true,
+                                }}
+                                onChange={this.handleChangeDate.bind(this)}
+                            />
                         </label>
                     </div>
                     <div className="form-group col-md-4">
-                        <label className = "Meta-label font-weight-bold">
+                        <label className = "Meta-label font-weight-bold" >
                             Start Time:
-                            {/*<input className = "Meta-input" type="text" value={this.state.startTime} onChange={this.handleChangeStartTime}/>*/}
-                            <TimePickers parentCallback={this.handleChangeStartTime}/>
+                            <br/>
+                            <TextField
+                                id="startTime"
+                                label="Time"
+                                type="time"
+                                defaultValue="00:00:00"
+                                InputLabelProps={{
+                                    shrink: true,
+                                }}
+                                onChange = {this.handleChangeStartTime.bind(this)}
+                            />
                         </label>
                     </div>
                     <div className="form-group col-md-4">
                         <label className = "Meta-label font-weight-bold">
                             End Time:
-                            {/*<input className = "Meta-input" type="text" value={this.state.endTime} onChange={this.handleChangeEndTime}/>*/}
-                            <TimePickers parentCallback={this.handleChangeEndTime}/>
+                            <br/>
+                            <TextField
+                                id="endTime"
+                                label="Time"
+                                type="time"
+                                defaultValue="00:00:00"
+                                InputLabelProps={{
+                                    shrink: true,
+                                }}
+                                onChange = {this.handleChangeEndTime.bind(this)}
+                            />
                         </label>
                     </div>
                 </div>
 
-
-                <AttendeesComponent parentCallback={this.handleChangeAttendees}></AttendeesComponent>
+                    <AttendeesComponent parentCallback1={this.handleAddAttendee}
+                                        parentCallback2={this.handleRemoveAttendee}
+                                        parentCallback3={this.handleAttendeeNameChange}
+                                        ref={this.attendeesComponent}
+                    ></AttendeesComponent>
                 <br/>
-                <input type="file" accept = "audio/*" id="inputFile" ref={this.fileInput} onChange={() => this.handleFileSubmit(this)} />
+                <div className="form-row mb-3 mt-4">
+                    <input className="chooseFile" type="file" accept = "audio/*" id="inputFile" ref={this.fileInput}/>
+                </div>
+                <div className="form-row mt-5">
+                    <Button
+                        variant="contained"
+                        color="default"
+                        startIcon={<CloudUploadIcon />}
+                        onClick={() => this.handleFileSubmit(this)}
+                    >
+                        Upload file
+                    </Button>
+                </div>
             </form>
         );
+    }
+
+    private resetForm() {
+        // @ts-ignore
+        document.getElementById("uploadAudioForm").reset();
+        // @ts-ignore
+        document.getElementById("meetingName").value = "";
+        // @ts-ignore
+        document.getElementById("organizerName").value = "";
+
+        this.setState({organizer: '',
+            startTime: '00:00',
+            endTime: '00:00',
+            meetingName: '',
+            meetingDate: '2020-01-01',
+            attendees: [],
+        });
+
+        // @ts-ignore
+        this.attendeesComponent.current.resetState();
     }
 }
