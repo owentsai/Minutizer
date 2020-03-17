@@ -116,9 +116,7 @@ export default class MetaFields extends React.Component<{}, inputProps> {
             let parts: string[] = this.fileInput.current.files[0].name.split('.');
             let extension: string = parts[parts.length - 1].toLowerCase();
             if (extension === "wav" || extension === "mp3") {
-                // @ts-ignore: Object is possibly 'null'.
-                this.uploadToCloud();
-                return true;
+                return this.uploadToCloud();
             } else {
                 toast.error(<div>FILE NOT SENT!<br />Only .mp3 or .wav files accepted</div>, {
                     position: "top-center",
@@ -139,7 +137,7 @@ export default class MetaFields extends React.Component<{}, inputProps> {
     }
 
 
-    uploadToCloud(){
+    uploadToCloud(): boolean{
         const metadata = {
             // @ts-ignore: Object is possibly 'null'.
             contentType: this.fileInput.current.files[0].type,
@@ -161,8 +159,6 @@ export default class MetaFields extends React.Component<{}, inputProps> {
         }
 
         console.log(metadata);
-        //Pass the metadata of the file to cloud function to retrieve a signed URL where the file will be uploaded
-        const metadataPromise = this.getSignedURL(metadata);
         this.toastId = toast("Uploading in progress, please wait...",  {
             position: "top-center",
             autoClose: false,
@@ -171,14 +167,15 @@ export default class MetaFields extends React.Component<{}, inputProps> {
             pauseOnHover: true,
             draggable: true,
         });
+
+        //Pass the metadata of the file to cloud function to retrieve a signed URL where the file will be uploaded
+        const metadataPromise = this.getSignedURL(metadata);
         let signedURL;
         metadataPromise.then((result:any) => {
-            // console.log(result);
             signedURL = result;
             const sendFilePromise = this.sendAudioFile(signedURL);
             let toastRef = this.toastId;
             sendFilePromise.then((result:any) => {
-
                 toast.update(toastRef, {
                     render: 'File Upload Successful!',
                     type: toast.TYPE.SUCCESS,
@@ -192,10 +189,18 @@ export default class MetaFields extends React.Component<{}, inputProps> {
                     closeOnClick: true,
                     pauseOnHover: true,
                     draggable: true,
-                })
+                });
                 this.resetForm();
+                return true;
             }).catch((error) => {
-                toast.error(<div>FILE NOT SENT!<br />Invalid field in metadata</div>, {
+                //Not yet able to distinguish which username is invalid (not in the system)
+                toast.update(toastRef, {
+                    render: <div>FILE NOT SENT!<br />Invalid username in metadata</div>,
+                    type: toast.TYPE.ERROR,
+                    className: css({
+                        transform: "rotateY(360deg)",
+                        transition: "transform 0.6s"
+                    }),
                     position: "top-center",
                     autoClose: 5000,
                     hideProgressBar: false,
@@ -203,11 +208,13 @@ export default class MetaFields extends React.Component<{}, inputProps> {
                     pauseOnHover: true,
                     draggable: true,
                 });
+                this.resetForm();
+                return false;
             });
         }).catch((error) => {
             console.log(`In catch: ${error}`);
         });
-
+        return false;
     }
 
     private convertToStringArray(attendees: any):string[] {
@@ -269,7 +276,7 @@ export default class MetaFields extends React.Component<{}, inputProps> {
                 fulfill(request.response);
             };
             request.onerror = function () {
-                reject('The request failed')
+                reject('The request failed');
             };
 
             request.send(JSON.stringify(metadata));
