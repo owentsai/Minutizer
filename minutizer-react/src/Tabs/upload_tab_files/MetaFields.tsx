@@ -98,7 +98,7 @@ export default class MetaFields extends React.Component<{}, inputProps> {
 
         let signedURL;
         metadataPromise.then((result:any) => {
-            console.log(result);
+            console.log("the result is " + result);
             signedURL = result;
             const sendFilePromise = this.sendAudioFile(signedURL);
             sendFilePromise.then((result:any) => {
@@ -118,10 +118,12 @@ export default class MetaFields extends React.Component<{}, inputProps> {
 
             //Getting the audio file from input tag
             let fileInput = document.getElementById('inputFile');
+            
             // @ts-ignore
             let file = fileInput.files[0];
             // @ts-ignore
             let fileType = fileInput.files[0].type;
+            console.log("the fileType is " + fileType);
             let formData = new FormData();
             formData.append('file',file);
 
