@@ -96,10 +96,11 @@ interface EnhancedTableProps {
   order: Order;
   orderBy: string;
   rowCount: number;
+  completed: boolean;
 }
 
 function EnhancedTableHead(props: EnhancedTableProps) {
-  const { classes, onSelectAllClick, order, orderBy, numSelected, rowCount, onRequestSort } = props;
+  const { classes, onSelectAllClick, order, orderBy, numSelected, rowCount, onRequestSort, completed } = props;
   const createSortHandler = (property: keyof Data) => (event: React.MouseEvent<unknown>) => {
     onRequestSort(event, property);
   };
@@ -107,6 +108,7 @@ function EnhancedTableHead(props: EnhancedTableProps) {
   return (
     <TableHead>
       <TableRow>
+      {completed ?
         <TableCell padding="checkbox">
           <Checkbox
             indeterminate={numSelected > 0 && numSelected < rowCount}
@@ -114,7 +116,7 @@ function EnhancedTableHead(props: EnhancedTableProps) {
             onChange={onSelectAllClick}
             inputProps={{ 'aria-label': 'select all' }}
           />
-        </TableCell>
+        </TableCell>:<TableCell></TableCell>}
         {headCells.map(headCell => (
           <TableCell
             key={headCell.id}
@@ -166,11 +168,12 @@ const useToolbarStyles = makeStyles((theme: Theme) =>
 interface EnhancedTableToolbarProps {
   meetingIdsSelected: String[];
   meetingNamesSelected: String[];
+  completed: boolean;
 }
 
 const EnhancedTableToolbar = (props: EnhancedTableToolbarProps) => {
   const classes = useToolbarStyles();
-  const { meetingIdsSelected, meetingNamesSelected } = props;
+  const { meetingIdsSelected, meetingNamesSelected, completed } = props;
   const numSelected = meetingIdsSelected.length;
   let popUpTitle = "Sending " + numSelected + " minute(s)";
   let dialogText = "";
@@ -238,6 +241,7 @@ const EnhancedTableToolbar = (props: EnhancedTableToolbarProps) => {
 
   return (
     <div>
+      {completed ? 
       <Toolbar
         className={clsx(classes.root, {
           [classes.highlight]: numSelected > 0,
@@ -311,7 +315,12 @@ const EnhancedTableToolbar = (props: EnhancedTableToolbarProps) => {
           </Button>
           </DialogActions>
         </Dialog>
-      </Toolbar>
+      </Toolbar>:
+      <Toolbar>
+        <Typography className={classes.title} variant="h6" id="tableTitle">
+          In-Progress Transcriptions
+        </Typography>
+        </Toolbar>}
     </div>
   );
 };
@@ -344,7 +353,7 @@ const useStyles = makeStyles((theme: Theme) =>
   }),
 );
 
-export function MyTable(url: {from: string}) {
+export function MyTable(url: {from: string, completed: boolean}) {
   const classes = useStyles();
   const [order, setOrder] = React.useState<Order>('desc');
   const [orderBy, setOrderBy] = React.useState<keyof Data>('meetingId');
@@ -444,7 +453,7 @@ export function MyTable(url: {from: string}) {
                     className="p-5 shadow-lg ">
     <div className={classes.root}>
       <Paper className={classes.paper}>
-        <EnhancedTableToolbar meetingIdsSelected={selected} meetingNamesSelected={selectedMeetingNames} />
+        <EnhancedTableToolbar meetingIdsSelected={selected} meetingNamesSelected={selectedMeetingNames} completed={url.completed}/>
         <TableContainer>
         {loading ?  <div style={{ display: 'flex', justifyContent: 'center' }}>
               <CircularProgress />
@@ -462,6 +471,7 @@ export function MyTable(url: {from: string}) {
               onSelectAllClick={handleSelectAllClick}
               onRequestSort={handleRequestSort}
               rowCount={meetings.length}
+              completed={url.completed}
             />
             <TableBody>
               {stableSort(meetings, getComparator(order, orderBy))
@@ -480,12 +490,13 @@ export function MyTable(url: {from: string}) {
                       key={meeting.meetingId}
                       selected={isItemSelected}
                     >
+                    {url.completed ?
                       <TableCell padding="checkbox">
                         <Checkbox
                           checked={isItemSelected}
                           inputProps={{ 'aria-labelledby': labelId }}
                         />
-                      </TableCell>
+                      </TableCell>: <TableCell></TableCell>}
                       <TableCell component="th" id={labelId} scope="row" padding="none">
                         {meeting.meetingId}
                       </TableCell>

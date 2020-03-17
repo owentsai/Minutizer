@@ -32,12 +32,12 @@ class MainPage extends Component {
                         </TabPanel>
                         <TabPanel>
                                 <div className="p-5 border-right border-secondary flex-fill text-center">
-                                    <div><MyTable from={this.completedTranscriptionURL} /></div>
+                                    <div><MyTable from={this.completedTranscriptionURL} completed={true} /></div>
                                 </div>
                         </TabPanel>
                         <TabPanel>
                                 <div className="p-5 border-right border-secondary flex-fill text-center">
-                                    <div><MyTable from={this.inProgressTranscriptionURL} /></div>
+                                    <div><MyTable from={this.inProgressTranscriptionURL}  completed={false}/></div>
                                 </div>
                         </TabPanel>
                     </Tabs>
