@@ -171,10 +171,6 @@ export default class MetaFields extends React.Component<{}, inputProps> {
         const metadataPromise = this.getSignedURL(metadata);
         let signedURL;
         metadataPromise.then((result:any) => {
-<<<<<<< HEAD
-            console.log("the result is " + result);
-=======
->>>>>>> 07a2f15b9083e60e45581a2005b76b1e9bf7fc07
             signedURL = result;
             const sendFilePromise = this.sendAudioFile(signedURL);
             let toastRef = this.toastId;
