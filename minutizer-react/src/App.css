@@ -37,6 +37,10 @@ h2 {
   display: flex;
 }
 
+.bg-danger {
+  padding: 10px;
+}
+
 .uploadTab {
   text-align: center;
   width: 50%;
