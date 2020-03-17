@@ -1,7 +1,6 @@
 import React from 'react';
 import AttendeesComponent from "./AttendeesComponent";
-import {ToastContainer, toast, Bounce} from 'react-toastify';
-import Icon from '@material-ui/core/Icon';
+import { toast } from 'react-toastify';
 import { css } from 'glamor';
 import CloudUploadIcon from '@material-ui/icons/CloudUpload';
 import Button from '@material-ui/core/Button';
