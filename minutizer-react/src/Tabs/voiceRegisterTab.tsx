@@ -1,24 +1,24 @@
 import React, {Component} from "react";
 import { ReactMic } from 'react-mic';
+import MicIcon from '@material-ui/icons/Mic';
+import StopIcon from '@material-ui/icons/Stop';
+import IconButton from '@material-ui/core/IconButton';
 
 class VoiceRegisterTab extends Component {
 
     state = {
         record: false,
     }
-
     startRecording = () => {
         this.setState({
           record: true
         });
     }
-     
     stopRecording = () => {
         this.setState({
           record: false
         });
     }
-     
     onData(recordedBlob) {
         console.log('chunk of real-time data is: ', recordedBlob);
     }
@@ -105,16 +105,17 @@ class VoiceRegisterTab extends Component {
                     strokeColor="#3944BC"
                     backgroundColor="#262626"
                     mimeType="audio/flac"/>
+                    <div className="p-1" style={{border: "2px solid black", borderRadius: "50%" }}>
                     {!this.state.record ?
-                    <div className="d-inline-flex flex-column align-items-center">
-                    <button style={{backgroundColor: '#00000000', borderStyle: 'none'}} onClick={this.startRecording} type="button"><img src={require('./icons/microphone_icon.png')} width='60' height='60' /></button>
-                    <h5>Start</h5> 
-                    </div> :
-                    <div className="d-inline-flex flex-column align-items-center">
-                    <button style={{backgroundColor: '#00000000', borderStyle: 'none'}} onClick={this.stopRecording} type="button"><img src={require('./icons/stop_icon.png')} width='60' height='60' /></button>
-                    <h5>Stop and Save</h5> 
-                    </div> }
-                    <span className="font-weight-bold">Click start and read out loud the following phrases, then click stop to register voice</span>
+                    <IconButton  style={{border: "2px solid"}} aria-label="record" color="secondary" onClick={this.startRecording}>
+                        <MicIcon fontSize="large"/>
+                    </IconButton> :
+                    <IconButton style={{border: "2px solid"}} aria-label="stop" color="secondary" onClick={this.stopRecording}>
+                        <StopIcon fontSize="large"/>
+                    </IconButton>
+                    }
+                    </div>
+                    <span className="font-weight-bold">Click mic icon and read out loud the following phrases, then click stop to register voice</span>
                     <text>
                     <em>Oak is strong and also gives shade.</em>
                     </text>
