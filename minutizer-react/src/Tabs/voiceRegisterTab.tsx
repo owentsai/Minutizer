@@ -1,24 +1,24 @@
 import React, {Component} from "react";
 import { ReactMic } from 'react-mic';
+import MicIcon from '@material-ui/icons/Mic';
+import StopIcon from '@material-ui/icons/Stop';
+import IconButton from '@material-ui/core/IconButton';
 
 class VoiceRegisterTab extends Component {
 
     state = {
         record: false,
     }
-
     startRecording = () => {
         this.setState({
           record: true
         });
     }
-     
     stopRecording = () => {
         this.setState({
           record: false
         });
     }
-     
     onData(recordedBlob) {
         console.log('chunk of real-time data is: ', recordedBlob);
     }
@@ -92,60 +92,64 @@ class VoiceRegisterTab extends Component {
 
     render() {
         return(
-            <div className="d-inline-flex flex-column align-items-center">
-                <span className="pt-5">Your Voice Enrolment Status: [Insert Status]</span>
+            
+            <div style={{margin: '50px 150px', borderRadius: "25px"}} 
+            className="p-3 shadow-lg">
+                <div className="d-flex flex-column align-items-center">
+                <h3>Your Voice Enrolment Status: [Insert Status]</h3>
                 <ReactMic
                     record={this.state.record}
                     onStop={this.registerVoice}
                     onData={this.onData}
-                    className="rounded-lg m-3"
+                    className="d-flex align-self-stretch rounded-lg m-3"
                     strokeColor="#3944BC"
                     backgroundColor="#262626"
                     mimeType="audio/flac"/>
+                    <div className="p-1" style={{border: "2px solid black", borderRadius: "50%" }}>
                     {!this.state.record ?
-                    <div className="d-inline-flex flex-column align-items-center">
-                    <button style={{backgroundColor: '#00000000', borderStyle: 'none'}} onClick={this.startRecording} type="button"><img src={require('./icons/microphone_icon.png')} width='60' height='60' /></button>
-                    <span>Start</span> 
-                    </div> :
-                    <div className="d-inline-flex flex-column align-items-center">
-                    <button style={{backgroundColor: '#00000000', borderStyle: 'none'}} onClick={this.stopRecording} type="button"><img src={require('./icons/stop_icon.png')} width='60' height='60' /></button>
-                    <span>Stop and Save</span> 
-                    </div> }
-                    <span>Click start and read out loud the following phrases, then click stop to register voice</span>
-                    <p>
+                    <IconButton  style={{border: "2px solid"}} aria-label="record" color="secondary" onClick={this.startRecording}>
+                        <MicIcon fontSize="large"/>
+                    </IconButton> :
+                    <IconButton style={{border: "2px solid"}} aria-label="stop" color="secondary" onClick={this.stopRecording}>
+                        <StopIcon fontSize="large"/>
+                    </IconButton>
+                    }
+                    </div>
+                    <span className="font-weight-bold">Click mic icon and read out loud the following phrases, then click stop to register voice</span>
+                    <text>
                     <em>Oak is strong and also gives shade.</em>
-                    </p>
-                    <p>
+                    </text>
+                    <text>
                     <em>Cats and dogs each hate the other.</em>
-                    </p>
-                    <p>
+                    </text>
+                    <text>
                     <em>The pipe began to rust while new.</em>
-                    </p>
-                    <p>
+                    </text>
+                    <text>
                     <em>Open the crate but don't break the glass.</em>
-                    </p>
-                    <p>
+                    </text>
+                    <text>
                     <em>Add the sum to the product of these three.</em>
-                    </p>
-                    <p>
+                    </text>
+                    <text>
                     <em>Thieves who rob friends deserve jail.</em>
-                    </p>
-                    <p>
+                    </text>
+                    <text>
                     <em>The ripe taste of cheese improves with age.</em>
-                    </p>
-                    <p>
+                    </text>
+                    <text>
                     <em>Act on these orders with great speed.</em>
-                    </p>
-                    <p>
+                    </text>
+                    <text>
                     <em>The ripe taste of cheese improves with age.</em>
-                    </p>
-                    <p>
+                    </text>
+                    <text>
                     <em>The hog crawled under the high fence.</em>
-                    </p>
-                    <p>
+                    </text>
+                    <text>
                     <em>Move the vat over the hot fire.</em>
-                    </p>
-                    
+                    </text>
+                    </div>
 
             </div>
         );
