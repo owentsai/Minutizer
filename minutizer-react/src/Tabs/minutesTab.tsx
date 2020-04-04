@@ -32,22 +32,31 @@ import Alert from "@material-ui/lab/Alert";
 
 import { connect } from "react-redux";
 
+const mapStateToProps = ({ user }) => ({
+  currentUser: user.currentUser
+});
+
 const postURL = `https://us-central1-hacksbc-268409.cloudfunctions.net/meeting-minutes-email`;
 
 export interface Data {
   meetingId: string;
   meetingName: string;
   meetingDate: string;
-  organizerUserName: string;
+  organizerEmail: string;
 }
 
 function createData(
   meetingId: string,
   meetingName: string,
   meetingDate: string,
-  organizerUserName: string
+  organizerEmail: string
 ): Data {
-  return { meetingId, meetingName, meetingDate, organizerUserName };
+  return {
+    meetingId,
+    meetingName,
+    meetingDate,
+    organizerEmail: organizerEmail
+  };
 }
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
@@ -111,7 +120,7 @@ const headCells: HeadCell[] = [
     label: "Meeting Date"
   },
   {
-    id: "organizerUserName",
+    id: "organizerEmail",
     numeric: true,
     disablePadding: false,
     label: "Organizer"
@@ -219,6 +228,7 @@ interface EnhancedTableToolbarProps {
   meetingIdsSelected: String[];
   meetingNamesSelected: String[];
   completed: boolean;
+  currentUser: any;
 }
 
 const EnhancedTableToolbar = (props: EnhancedTableToolbarProps) => {
@@ -228,17 +238,30 @@ const EnhancedTableToolbar = (props: EnhancedTableToolbarProps) => {
   let popUpTitle = "Sending " + numSelected + " minute(s)";
   let dialogText = "";
   let successfulRes = 0;
-  const requestButtonHandler = () => {
+  const requestButtonHandler = async () => {
     if (numSelected) {
       handleClickOpen();
+      const getUserIdToken = async () => {
+        if (props.currentUser) {
+          try {
+            const token = await props.currentUser.getIdToken(false);
+            return token;
+          } catch (e) {
+            console.log(e);
+          }
+        }
+      };
+      const authorizationHeaderValue: string =
+        "Bearer " + (await getUserIdToken());
+      const headers: Headers = new Headers();
+      headers.append("Authorization", authorizationHeaderValue);
+      headers.append("Accept", "application/json");
+      headers.append("Content-Type", "application/json");
       // send requests to all selected meetings
       for (let i = 0; i < meetingIdsSelected.length; i++) {
         fetch(postURL, {
           method: "POST",
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json"
-          },
+          headers: headers,
           body: JSON.stringify({
             meetingId: meetingIdsSelected[i],
             meetingName: meetingNamesSelected[i]
@@ -309,7 +332,7 @@ const EnhancedTableToolbar = (props: EnhancedTableToolbarProps) => {
               Meeting Minutes
             </Typography>
           )}
-          <div onClick={event => requestButtonHandler()}>
+          <div onClick={() => requestButtonHandler()}>
             <IconButton aria-label="disabled" disabled={numSelected <= 0}>
               <MailOutlineIcon style={{ fontSize: 35 }} />
             </IconButton>
@@ -416,7 +439,15 @@ const useStyles = makeStyles((theme: Theme) =>
   })
 );
 
-function MyTable(url: { from: string; completed: boolean; currentUser: any }) {
+const EnhancedTableToolbarWithRedux = connect(mapStateToProps)(
+  EnhancedTableToolbar
+);
+
+function MyTable(props: {
+  from: string;
+  completed: boolean;
+  currentUser: any;
+}) {
   const classes = useStyles();
   const [order, setOrder] = React.useState<Order>("desc");
   const [orderBy, setOrderBy] = React.useState<keyof Data>("meetingId");
@@ -436,12 +467,12 @@ function MyTable(url: { from: string; completed: boolean; currentUser: any }) {
   }, [loading]);
 
   const fetchMeetings = async () => {
-    const requestUrl = url.from + `&page=${page}`;
-    console.log(url.currentUser);
+    const requestUrl = props.from + `&page=${page}`;
+    console.log(props.currentUser);
     const getUserIdToken = async () => {
-      if (url.currentUser) {
+      if (props.currentUser) {
         try {
-          const token = await url.currentUser.getIdToken(false);
+          const token = await props.currentUser.getIdToken(false);
           return token;
         } catch (e) {
           console.log(e);
@@ -465,7 +496,7 @@ function MyTable(url: { from: string; completed: boolean; currentUser: any }) {
         el.meetingId,
         el.meetingName,
         el.meetingDate,
-        el.organizerUserName
+        el.organizerEmail
       )
     );
     // maybe add some error checking
@@ -561,10 +592,10 @@ function MyTable(url: { from: string; completed: boolean; currentUser: any }) {
     >
       <div className={classes.root}>
         <Paper className={classes.paper}>
-          <EnhancedTableToolbar
+          <EnhancedTableToolbarWithRedux
             meetingIdsSelected={selected}
             meetingNamesSelected={selectedMeetingNames}
-            completed={url.completed}
+            completed={props.completed}
           />
           <TableContainer>
             {loading ? (
@@ -585,7 +616,7 @@ function MyTable(url: { from: string; completed: boolean; currentUser: any }) {
                   onSelectAllClick={handleSelectAllClick}
                   onRequestSort={handleRequestSort}
                   rowCount={meetings.length}
-                  completed={url.completed}
+                  completed={props.completed}
                 />
                 <TableBody>
                   {stableSort(meetings, getComparator(order, orderBy))
@@ -610,7 +641,7 @@ function MyTable(url: { from: string; completed: boolean; currentUser: any }) {
                           key={meeting.meetingId}
                           selected={isItemSelected}
                         >
-                          {url.completed ? (
+                          {props.completed ? (
                             <TableCell padding="checkbox">
                               <Checkbox
                                 checked={isItemSelected}
@@ -635,7 +666,7 @@ function MyTable(url: { from: string; completed: boolean; currentUser: any }) {
                             {meeting.meetingDate}
                           </TableCell>
                           <TableCell align="right">
-                            {meeting.organizerUserName}
+                            {meeting.organizerEmail}
                           </TableCell>
                         </TableRow>
                       );
@@ -663,7 +694,5 @@ function MyTable(url: { from: string; completed: boolean; currentUser: any }) {
     </div>
   );
 }
-const mapStateToProps = ({ user }) => ({
-  currentUser: user.currentUser
-});
+
 export default connect(mapStateToProps)(MyTable);
