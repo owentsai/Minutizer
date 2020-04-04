@@ -4,7 +4,6 @@ import MicIcon from "@material-ui/icons/Mic";
 import StopIcon from "@material-ui/icons/Stop";
 import IconButton from "@material-ui/core/IconButton";
 import { connect } from "react-redux";
-import { auth } from "../firebase/firebase.utils";
 
 interface VoiceRegisterTabStates {
   record: boolean;
@@ -60,7 +59,6 @@ class VoiceRegisterTab extends Component<
     const authorizationHeaderValue: string =
       "Bearer " + (await getUserIdToken());
 
-    console.log(authorizationHeaderValue);
     const headers: Headers = new Headers();
     headers.append("Authorization", authorizationHeaderValue);
     headers.append("Accept", "application/json");
@@ -70,7 +68,7 @@ class VoiceRegisterTab extends Component<
     fetch(postURL, {
       method: "POST",
       headers: headers,
-      body: JSON.stringify({ metadata })
+      body: JSON.stringify(metadata)
     })
       .then(res => console.log("success: " + res))
       .catch(err => console.log("email failed: " + err));

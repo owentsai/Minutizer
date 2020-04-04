@@ -20,12 +20,6 @@ class App extends React.Component<{ setCurrentUser; currentUser }, RootState> {
 
     this.unsubscribeFromAuth = auth.onAuthStateChanged(user => {
       setCurrentUser(user);
-
-      if (user) {
-        auth.currentUser
-          ?.getIdToken(false)
-          .then(idToken => console.log("TOKEN: " + idToken));
-      }
     });
   }
 

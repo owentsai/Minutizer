@@ -3,7 +3,7 @@ import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
 import "react-tabs/style/react-tabs.css";
 import "./App.css";
 import VoiceRegisterTab from "./Tabs/voiceRegisterTab";
-import { MyTable } from "./Tabs/minutesTab";
+import MyTable from "./Tabs/minutesTab";
 import UploadTab from "./Tabs/uploadTab";
 import TopBar from "./TopBar/top-bar.component";
 

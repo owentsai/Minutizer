@@ -293,12 +293,10 @@ class MetaFields extends React.Component<{ currentUser }, inputProps> {
     };
     const token = await getUserIdToken();
     return new Promise(function(fulfill, reject) {
-      // const proxyurl = "https://cors-anywhere.herokuapp.com/";
       const URL =
         "https://us-central1-hacksbc-268409.cloudfunctions.net/upload_audio";
       const request = new XMLHttpRequest();
       const authorizationValue: string = "Bearer " + token;
-      console.log(authorizationValue);
       request.open("POST", URL, true);
       request.setRequestHeader("Content-Type", "application/json");
       request.setRequestHeader("Authorization", authorizationValue);
