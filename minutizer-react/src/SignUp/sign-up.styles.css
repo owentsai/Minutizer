@@ -1,0 +1,17 @@
+.paper {
+  margin-top: 128px;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+}
+.avatar {
+  margin: 8px;
+  background-color: #e33371 !important;
+}
+.form {
+  width: 100%;
+  margin-top: 24px;
+}
+.signUpButton {
+  margin: 24px 0px 16px 0px !important;
+}
