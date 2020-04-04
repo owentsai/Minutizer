@@ -17,7 +17,7 @@ interface SignInState {
   password: string;
 }
 
-class SignIn extends React.Component<{ history }, SignInState> {
+class SignIn extends React.Component<{}, SignInState> {
   constructor(props: any) {
     super(props);
 
@@ -30,6 +30,13 @@ class SignIn extends React.Component<{ history }, SignInState> {
     this.handleChange = this.handleChange.bind(this);
   }
 
+  componentWillUnmount() {
+    this.setState({
+      email: "",
+      password: ""
+    });
+  }
+
   async handleSubmit(event: any) {
     event.preventDefault();
     const email = this.state.email;
@@ -37,26 +44,18 @@ class SignIn extends React.Component<{ history }, SignInState> {
 
     try {
       await auth.signInWithEmailAndPassword(email, password);
-      alert("Log in successful!");
-      this.props.history.push("/");
     } catch (error) {
       if (error.code === "auth/invalid-email") {
         alert(error.message);
       }
       if (error.code === "auth/user-not-found") {
-        alert(error.message);
+        alert("No account found associated to this email address!");
       }
       if (error.code === "auth/wrong-password") {
         alert(error.message);
       }
+      this.setState({ email: "", password: "" });
     }
-
-    this.setState({
-      email: "",
-      password: ""
-    });
-
-    return;
   }
 
   handleChange(event: any) {

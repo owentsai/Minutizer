@@ -6,6 +6,7 @@ import VoiceRegisterTab from "./Tabs/voiceRegisterTab";
 import { MyTable } from "./Tabs/minutesTab";
 import UploadTab from "./Tabs/uploadTab";
 import { Redirect } from "react-router-dom";
+import TopBar from "./TopBar/top-bar.component";
 
 class MainPage extends Component<{}> {
   completedTranscriptionURL =
@@ -19,9 +20,7 @@ class MainPage extends Component<{}> {
     // }
     return (
       <div className="d-flex flex-column">
-        <div className="bg-danger text-white text-center">
-          <h1>Welcome to Minutizer</h1>
-        </div>
+        <TopBar />
         <div>
           <Tabs>
             <TabList>

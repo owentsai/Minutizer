@@ -55,7 +55,6 @@ class SignUp extends React.Component<{}, SignUpState> {
       if (error.code === "auth/weak-password") {
         alert(error.message);
       }
-      console.error(error);
     }
 
     this.setState({
@@ -63,7 +62,6 @@ class SignUp extends React.Component<{}, SignUpState> {
       password: "",
       confirmPassword: ""
     });
-    return;
   }
 
   handleChange(event: any) {
