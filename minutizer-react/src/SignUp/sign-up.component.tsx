@@ -90,6 +90,7 @@ class SignUp extends React.Component<{}, SignUpState> {
               <Grid item xs={12}>
                 <TextField
                   variant="outlined"
+                  color="secondary"
                   required
                   fullWidth
                   id="email"
@@ -104,6 +105,7 @@ class SignUp extends React.Component<{}, SignUpState> {
               <Grid item xs={12}>
                 <TextField
                   variant="outlined"
+                  color="secondary"
                   required
                   fullWidth
                   name="password"
@@ -120,6 +122,7 @@ class SignUp extends React.Component<{}, SignUpState> {
                   variant="outlined"
                   required
                   fullWidth
+                  color="secondary"
                   name="confirmPassword"
                   label="Confirm Password"
                   type="password"

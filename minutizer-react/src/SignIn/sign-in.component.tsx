@@ -85,6 +85,7 @@ class SignIn extends React.Component<{}, SignInState> {
               <TextField
                 variant="outlined"
                 margin="normal"
+                color="secondary"
                 required
                 fullWidth
                 id="email"
@@ -98,6 +99,7 @@ class SignIn extends React.Component<{}, SignInState> {
               <TextField
                 variant="outlined"
                 margin="normal"
+                color="secondary"
                 required
                 fullWidth
                 name="password"

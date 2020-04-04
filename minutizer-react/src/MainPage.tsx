@@ -5,7 +5,6 @@ import "./App.css";
 import VoiceRegisterTab from "./Tabs/voiceRegisterTab";
 import { MyTable } from "./Tabs/minutesTab";
 import UploadTab from "./Tabs/uploadTab";
-import { Redirect } from "react-router-dom";
 import TopBar from "./TopBar/top-bar.component";
 
 class MainPage extends Component<{}> {
@@ -15,9 +14,6 @@ class MainPage extends Component<{}> {
     "https://us-central1-hacksbc-268409.cloudfunctions.net/transcription-status-check?inProgressTranscriptions=true";
 
   render() {
-    // if (!this.props.currentUser) {
-    //   return <Redirect to="/signin" />;
-    // }
     return (
       <div className="d-flex flex-column">
         <TopBar />

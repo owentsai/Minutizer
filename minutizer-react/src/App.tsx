@@ -52,6 +52,7 @@ class App extends React.Component<{ setCurrentUser; currentUser }, RootState> {
   );*/
 
   render() {
+    const { currentUser } = this.props;
     return (
       <div>
         <Switch>
@@ -59,7 +60,7 @@ class App extends React.Component<{ setCurrentUser; currentUser }, RootState> {
             exact
             path="/signup"
             render={() =>
-              !this.props.currentUser ? (
+              !currentUser ? (
                 <SignUp {...this.props} />
               ) : (
                 <Redirect to="/main" />
@@ -70,7 +71,7 @@ class App extends React.Component<{ setCurrentUser; currentUser }, RootState> {
             exact
             path="/signin"
             render={() =>
-              !this.props.currentUser ? (
+              !currentUser ? (
                 <SignIn {...this.props} />
               ) : (
                 <Redirect to="/main" />
@@ -80,7 +81,7 @@ class App extends React.Component<{ setCurrentUser; currentUser }, RootState> {
           <Route
             path="/main"
             render={() =>
-              this.props.currentUser ? (
+              currentUser ? (
                 <MainPage {...this.props} />
               ) : (
                 <Redirect to="/signin" />
