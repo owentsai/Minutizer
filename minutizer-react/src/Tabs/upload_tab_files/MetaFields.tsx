@@ -7,7 +7,6 @@ import Button from "@material-ui/core/Button";
 import "react-toastify/dist/ReactToastify.css";
 import TextField from "@material-ui/core/TextField";
 import { connect } from "react-redux";
-import { auth } from "../../firebase/firebase.utils";
 
 toast.configure();
 
@@ -281,23 +280,25 @@ class MetaFields extends React.Component<{ currentUser }, inputProps> {
   }
 
   //HTTP request using XMLHTTP
-  getSignedURL(metadata: any) {
-    const getUserIdToken = () => {
-      let token: string = "";
+  async getSignedURL(metadata: any) {
+    const getUserIdToken = async () => {
       if (this.props.currentUser) {
-        this.props.currentUser
-          .getIdToken()
-          .then((idToken: string) => (token = idToken));
+        try {
+          const token = await this.props.currentUser.getIdToken(false);
+          return token;
+        } catch (e) {
+          console.log(e);
+        }
       }
-      return token;
     };
-
+    const token = await getUserIdToken();
     return new Promise(function(fulfill, reject) {
       // const proxyurl = "https://cors-anywhere.herokuapp.com/";
       const URL =
         "https://us-central1-hacksbc-268409.cloudfunctions.net/upload_audio";
       const request = new XMLHttpRequest();
-      const authorizationValue: string = "Bearer " + getUserIdToken();
+      const authorizationValue: string = "Bearer " + token;
+      console.log(authorizationValue);
       request.open("POST", URL, true);
       request.setRequestHeader("Content-Type", "application/json");
       request.setRequestHeader("Authorization", authorizationValue);
@@ -319,6 +320,7 @@ class MetaFields extends React.Component<{ currentUser }, inputProps> {
       request.send(JSON.stringify(metadata));
     });
   }
+
   render() {
     return (
       <form id="uploadAudioForm">
