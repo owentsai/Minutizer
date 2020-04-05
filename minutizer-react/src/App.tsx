@@ -1,10 +1,9 @@
 import React from "react";
 import { connect } from "react-redux";
 import { Route, Switch, Redirect } from "react-router-dom";
-import "./Tabs/upload_tab_files/MetaFields.css";
-import SignUp from "./SignUp/sign-up.component";
-import MainPage from "./MainPage";
-import SignIn from "./SignIn/sign-in.component";
+import SignUp from "./components/SignUp/sign-up.component";
+import MainPage from "./components/MainPage";
+import SignIn from "./components/SignIn/sign-in.component";
 import { auth } from "./firebase/firebase.utils";
 import { setCurrentUser } from "./redux/user/user.actions";
 

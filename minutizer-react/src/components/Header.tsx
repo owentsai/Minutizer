@@ -2,8 +2,7 @@ import React from "react";
 import {
   createStyles,
   makeStyles,
-  Theme,
-  createMuiTheme
+  Theme
 } from "@material-ui/core/styles";
 import AppBar from "@material-ui/core/AppBar";
 import Toolbar from "@material-ui/core/Toolbar";
@@ -30,7 +29,7 @@ const useStyles = makeStyles((theme: Theme) =>
   })
 );
 
-const TopBar = () => {
+const Header = () => {
   const classes = useStyles();
 
   return (
@@ -54,4 +53,4 @@ const TopBar = () => {
     </div>
   );
 };
-export default TopBar;
+export default Header;

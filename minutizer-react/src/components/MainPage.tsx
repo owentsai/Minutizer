@@ -1,11 +1,11 @@
 import React, { Component } from "react";
 import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
 import "react-tabs/style/react-tabs.css";
-import "./App.css";
-import VoiceRegisterTab from "./Tabs/voiceRegisterTab";
-import MyTable from "./Tabs/minutesTab";
-import UploadTab from "./Tabs/uploadTab";
-import TopBar from "./TopBar/top-bar.component";
+import "./../App.css";
+import VoiceRegisterTab from "./VoiceRegistration";
+import MyTable from "./Minutes";
+import UploadAudio from "./UploadAudio";
+import Header from "./Header";
 
 class MainPage extends Component<{}> {
   completedTranscriptionURL =
@@ -16,8 +16,8 @@ class MainPage extends Component<{}> {
   render() {
     return (
       <div className="d-flex flex-column">
-        <TopBar />
-        <div>
+        <Header/>
+        <div className="mt-3">
           <Tabs>
             <TabList>
               <Tab
@@ -67,30 +67,22 @@ class MainPage extends Component<{}> {
               </Tab>
             </TabList>
             <TabPanel>
-              <UploadTab />
+              <UploadAudio />
             </TabPanel>
             <TabPanel>
               <VoiceRegisterTab />
             </TabPanel>
             <TabPanel>
-              <div className="p-5 border-right border-secondary flex-fill text-center">
-                <div>
-                  <MyTable
-                    from={this.completedTranscriptionURL}
-                    completed={true}
-                  />
-                </div>
-              </div>
-            </TabPanel>
-            <TabPanel>
-              <div className="p-5 border-right border-secondary flex-fill text-center">
-                <div>
                   <MyTable
                     from={this.inProgressTranscriptionURL}
                     completed={false}
                   />
-                </div>
-              </div>
+            </TabPanel>
+            <TabPanel>
+                  <MyTable
+                    from={this.completedTranscriptionURL}
+                    completed={true}
+                  />
             </TabPanel>
           </Tabs>
         </div>

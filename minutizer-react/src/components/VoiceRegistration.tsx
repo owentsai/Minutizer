@@ -61,8 +61,6 @@ class VoiceRegisterTab extends Component<
       contentType: recordedBlob.blob.type
     };
 
-    console.log("the metadata is " + metadata);
-
     const postURL =
       "https://us-central1-hacksbc-268409.cloudfunctions.net/enrol_voice_begin";
 
@@ -149,8 +147,7 @@ class VoiceRegisterTab extends Component<
   render() {
     return (
       <div
-        style={{ margin: "50px 150px", borderRadius: "25px" }}
-        className="p-3 shadow-lg"
+        className="p-3 shadow-lg card-m"
       >
         <div className="d-flex flex-column align-items-center">
           <h3>Your Voice Enrolment Status: [Insert Status]</h3>

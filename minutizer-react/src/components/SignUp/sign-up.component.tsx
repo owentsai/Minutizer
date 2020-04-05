@@ -9,7 +9,7 @@ import Grid from "@material-ui/core/Grid";
 import LockOutlinedIcon from "@material-ui/icons/LockOutlined";
 import Typography from "@material-ui/core/Typography";
 import Container from "@material-ui/core/Container";
-import { auth } from "../firebase/firebase.utils";
+import { auth } from "../../firebase/firebase.utils";
 import "./sign-up.styles.css";
 
 interface SignUpState {

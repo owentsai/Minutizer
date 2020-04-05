@@ -29,7 +29,6 @@ import DialogContent from "@material-ui/core/DialogContent";
 import DialogContentText from "@material-ui/core/DialogContentText";
 import DialogTitle from "@material-ui/core/DialogTitle";
 import Alert from "@material-ui/lab/Alert";
-
 import { connect } from "react-redux";
 
 const mapStateToProps = ({ user }) => ({
@@ -345,9 +344,7 @@ const EnhancedTableToolbar = (props: EnhancedTableToolbarProps) => {
           >
             <DialogTitle id="alert-dialog-title">{popUpTitle}</DialogTitle>
             <DialogContent>
-              <div style={{ display: "flex", justifyContent: "center" }}>
-                <CircularProgress />
-              </div>
+                <CircularProgress className="d-flex justify-content-center"/>
               <DialogContentText id="alert-dialog-description">
                 {dialogText}
               </DialogContentText>
@@ -361,14 +358,13 @@ const EnhancedTableToolbar = (props: EnhancedTableToolbarProps) => {
             aria-describedby="alert-dialog-description"
           >
             <DialogContent>
-              <div style={{ display: "flex", justifyContent: "center" }}>
                 <Alert
+                className="d-flex justify-content-center"
                   icon={<CheckIcon fontSize="inherit" />}
                   severity="success"
                 >
                   Success
                 </Alert>
-              </div>
               <DialogContentText id="alert-dialog-description">
                 {dialogText}
               </DialogContentText>
@@ -387,9 +383,7 @@ const EnhancedTableToolbar = (props: EnhancedTableToolbarProps) => {
             aria-describedby="alert-dialog-description"
           >
             <DialogContent>
-              <div style={{ display: "flex", justifyContent: "center" }}>
-                <Alert severity="error">An error has occured</Alert>
-              </div>
+                <Alert className="d-flex justify-content-center" severity="error">An error has occured</Alert>
               <DialogContentText id="alert-dialog-description">
                 {dialogText}
               </DialogContentText>
@@ -468,7 +462,6 @@ function MyTable(props: {
 
   const fetchMeetings = async () => {
     const requestUrl = props.from + `&page=${page}`;
-    console.log(props.currentUser);
     const getUserIdToken = async () => {
       if (props.currentUser) {
         try {
@@ -583,114 +576,105 @@ function MyTable(props: {
 
   return (
     <div
-      style={{
-        margin: "0px 0px",
-        borderRadius: "25px",
-        backgroundColor: "e62020"
-      }}
-      className="p-5 shadow-lg "
+      className="shadow-lg card-l"
     >
-      <div className={classes.root}>
-        <Paper className={classes.paper}>
-          <EnhancedTableToolbarWithRedux
-            meetingIdsSelected={selected}
-            meetingNamesSelected={selectedMeetingNames}
-            completed={props.completed}
-          />
-          <TableContainer>
-            {loading ? (
-              <div style={{ display: "flex", justifyContent: "center" }}>
-                <CircularProgress />
-              </div>
-            ) : (
-              <Table
-                className={classes.table}
-                aria-labelledby="tableTitle"
-                aria-label="enhanced table"
-              >
-                <EnhancedTableHead
-                  classes={classes}
-                  numSelected={selected.length}
-                  order={order}
-                  orderBy={orderBy}
-                  onSelectAllClick={handleSelectAllClick}
-                  onRequestSort={handleRequestSort}
-                  rowCount={meetings.length}
-                  completed={props.completed}
-                />
-                <TableBody>
-                  {stableSort(meetings, getComparator(order, orderBy))
-                    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                    .map((meeting, index) => {
-                      const isItemSelected = isSelected(meeting.meetingId);
-                      const labelId = `enhanced-table-checkbox-${index}`;
+      <Paper className={classes.paper} style={{ borderRadius: "25px", padding: "15px" }}>
+        <EnhancedTableToolbarWithRedux
+          meetingIdsSelected={selected}
+          meetingNamesSelected={selectedMeetingNames}
+          completed={props.completed}
+        />
+        <TableContainer>
+          {loading ? (
+              <CircularProgress className="d-flex justify-content-center" />
+          ) : (
+            <Table
+              className={classes.table}
+              aria-labelledby="tableTitle"
+              aria-label="enhanced table"
+            >
+              <EnhancedTableHead
+                classes={classes}
+                numSelected={selected.length}
+                order={order}
+                orderBy={orderBy}
+                onSelectAllClick={handleSelectAllClick}
+                onRequestSort={handleRequestSort}
+                rowCount={meetings.length}
+                completed={props.completed}
+              />
+              <TableBody>
+                {stableSort(meetings, getComparator(order, orderBy))
+                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                  .map((meeting, index) => {
+                    const isItemSelected = isSelected(meeting.meetingId);
+                    const labelId = `enhanced-table-checkbox-${index}`;
 
-                      return (
-                        <TableRow
-                          hover
-                          onClick={event =>
-                            handleClick(
-                              event,
-                              meeting.meetingId,
-                              meeting.meetingName
-                            )
-                          }
-                          role="checkbox"
-                          aria-checked={isItemSelected}
-                          tabIndex={-1}
-                          key={meeting.meetingId}
-                          selected={isItemSelected}
+                    return (
+                      <TableRow
+                        hover
+                        onClick={event =>
+                          handleClick(
+                            event,
+                            meeting.meetingId,
+                            meeting.meetingName
+                          )
+                        }
+                        role="checkbox"
+                        aria-checked={isItemSelected}
+                        tabIndex={-1}
+                        key={meeting.meetingId}
+                        selected={isItemSelected}
+                      >
+                        {props.completed ? (
+                          <TableCell padding="checkbox">
+                            <Checkbox
+                              checked={isItemSelected}
+                              inputProps={{ "aria-labelledby": labelId }}
+                            />
+                          </TableCell>
+                        ) : (
+                          <TableCell></TableCell>
+                        )}
+                        <TableCell
+                          component="th"
+                          id={labelId}
+                          scope="row"
+                          padding="none"
                         >
-                          {props.completed ? (
-                            <TableCell padding="checkbox">
-                              <Checkbox
-                                checked={isItemSelected}
-                                inputProps={{ "aria-labelledby": labelId }}
-                              />
-                            </TableCell>
-                          ) : (
-                            <TableCell></TableCell>
-                          )}
-                          <TableCell
-                            component="th"
-                            id={labelId}
-                            scope="row"
-                            padding="none"
-                          >
-                            {meeting.meetingId}
-                          </TableCell>
-                          <TableCell align="right">
-                            {meeting.meetingName}
-                          </TableCell>
-                          <TableCell align="right">
-                            {meeting.meetingDate}
-                          </TableCell>
-                          <TableCell align="right">
-                            {meeting.organizerEmail}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  {emptyRows > 0 && (
-                    <TableRow style={{ height: 33 * emptyRows }}>
-                      <TableCell colSpan={6} />
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            )}
-          </TableContainer>
-          <TablePagination
-            rowsPerPageOptions={[10]}
-            component="div"
-            count={count}
-            rowsPerPage={rowsPerPage}
-            page={page}
-            onChangePage={handleChangePage}
-            onChangeRowsPerPage={handleChangeRowsPerPage}
-          />
-        </Paper>
-      </div>
+                          {meeting.meetingId}
+                        </TableCell>
+                        <TableCell align="right">
+                          {meeting.meetingName}
+                        </TableCell>
+                        <TableCell align="right">
+                          {meeting.meetingDate}
+                        </TableCell>
+                        <TableCell align="right">
+                          {meeting.organizerEmail}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                {emptyRows > 0 && (
+                  <TableRow style={{ height: 33 * emptyRows }}>
+                    <TableCell colSpan={6} />
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          )}
+        </TableContainer>
+        <TablePagination
+          rowsPerPageOptions={[10]}
+          component="div"
+          count={count}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onChangePage={handleChangePage}
+          onChangeRowsPerPage={handleChangeRowsPerPage}
+        />
+      </Paper>
     </div>
   );
 }
