@@ -1,29 +1,40 @@
-import React, {useEffect} from 'react';
-import clsx from 'clsx';
-import { createStyles, lighten, makeStyles, Theme } from '@material-ui/core/styles';
-import Table from '@material-ui/core/Table';
-import TableBody from '@material-ui/core/TableBody';
-import TableCell from '@material-ui/core/TableCell';
-import TableContainer from '@material-ui/core/TableContainer';
-import TableHead from '@material-ui/core/TableHead';
-import TablePagination from '@material-ui/core/TablePagination';
-import TableRow from '@material-ui/core/TableRow';
-import TableSortLabel from '@material-ui/core/TableSortLabel';
-import Toolbar from '@material-ui/core/Toolbar';
-import Typography from '@material-ui/core/Typography';
-import Paper from '@material-ui/core/Paper';
-import Checkbox from '@material-ui/core/Checkbox';
-import IconButton from '@material-ui/core/IconButton';
-import MailOutlineIcon from '@material-ui/icons/Email';
-import CheckIcon from '@material-ui/icons/Check';
-import CircularProgress from '@material-ui/core/CircularProgress';
-import Button from '@material-ui/core/Button';
-import Dialog from '@material-ui/core/Dialog';
-import DialogActions from '@material-ui/core/DialogActions';
-import DialogContent from '@material-ui/core/DialogContent';
-import DialogContentText from '@material-ui/core/DialogContentText';
-import DialogTitle from '@material-ui/core/DialogTitle';
-import Alert from '@material-ui/lab/Alert';
+import React, { useEffect } from "react";
+import clsx from "clsx";
+import {
+  createStyles,
+  lighten,
+  makeStyles,
+  Theme
+} from "@material-ui/core/styles";
+import Table from "@material-ui/core/Table";
+import TableBody from "@material-ui/core/TableBody";
+import TableCell from "@material-ui/core/TableCell";
+import TableContainer from "@material-ui/core/TableContainer";
+import TableHead from "@material-ui/core/TableHead";
+import TablePagination from "@material-ui/core/TablePagination";
+import TableRow from "@material-ui/core/TableRow";
+import TableSortLabel from "@material-ui/core/TableSortLabel";
+import Toolbar from "@material-ui/core/Toolbar";
+import Typography from "@material-ui/core/Typography";
+import Paper from "@material-ui/core/Paper";
+import Checkbox from "@material-ui/core/Checkbox";
+import IconButton from "@material-ui/core/IconButton";
+import MailOutlineIcon from "@material-ui/icons/Email";
+import CheckIcon from "@material-ui/icons/Check";
+import CircularProgress from "@material-ui/core/CircularProgress";
+import Button from "@material-ui/core/Button";
+import Dialog from "@material-ui/core/Dialog";
+import DialogActions from "@material-ui/core/DialogActions";
+import DialogContent from "@material-ui/core/DialogContent";
+import DialogContentText from "@material-ui/core/DialogContentText";
+import DialogTitle from "@material-ui/core/DialogTitle";
+import Alert from "@material-ui/lab/Alert";
+
+import { connect } from "react-redux";
+
+const mapStateToProps = ({ user }) => ({
+  currentUser: user.currentUser
+});
 
 const postURL = `https://us-central1-hacksbc-268409.cloudfunctions.net/meeting-minutes-email`;
 
@@ -31,16 +42,21 @@ export interface Data {
   meetingId: string;
   meetingName: string;
   meetingDate: string;
-  organizerUserName: string;
+  organizerEmail: string;
 }
 
 function createData(
   meetingId: string,
   meetingName: string,
   meetingDate: string,
-  organizerUserName: string,
+  organizerEmail: string
 ): Data {
-  return { meetingId, meetingName, meetingDate, organizerUserName };
+  return {
+    meetingId,
+    meetingName,
+    meetingDate,
+    organizerEmail: organizerEmail
+  };
 }
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
@@ -53,13 +69,16 @@ function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
   return 0;
 }
 
-type Order = 'asc' | 'desc';
+type Order = "asc" | "desc";
 
 function getComparator<Key extends keyof any>(
   order: Order,
-  orderBy: Key,
-): (a: { [key in Key]: number | string }, b: { [key in Key]: number | string }) => number {
-  return order === 'desc'
+  orderBy: Key
+): (
+  a: { [key in Key]: number | string },
+  b: { [key in Key]: number | string }
+) => number {
+  return order === "desc"
     ? (a, b) => descendingComparator(a, b, orderBy)
     : (a, b) => -descendingComparator(a, b, orderBy);
 }
@@ -82,17 +101,43 @@ interface HeadCell {
 }
 
 const headCells: HeadCell[] = [
-  { id: 'meetingId', numeric: false, disablePadding: true, label: 'Meeting ID' },
-  { id: 'meetingName', numeric: true, disablePadding: false, label: 'Meeting Name' },
-  { id: 'meetingDate', numeric: true, disablePadding: false, label: 'Meeting Date' },
-  { id: 'organizerUserName', numeric: true, disablePadding: false, label: 'Organizer' },
+  {
+    id: "meetingId",
+    numeric: false,
+    disablePadding: true,
+    label: "Meeting ID"
+  },
+  {
+    id: "meetingName",
+    numeric: true,
+    disablePadding: false,
+    label: "Meeting Name"
+  },
+  {
+    id: "meetingDate",
+    numeric: true,
+    disablePadding: false,
+    label: "Meeting Date"
+  },
+  {
+    id: "organizerEmail",
+    numeric: true,
+    disablePadding: false,
+    label: "Organizer"
+  }
 ];
 
 interface EnhancedTableProps {
   classes: ReturnType<typeof useStyles>;
   numSelected: number;
-  onRequestSort: (event: React.MouseEvent<unknown>, property: keyof Data) => void;
-  onSelectAllClick: (event: React.ChangeEvent<HTMLInputElement>, checked: boolean) => void;
+  onRequestSort: (
+    event: React.MouseEvent<unknown>,
+    property: keyof Data
+  ) => void;
+  onSelectAllClick: (
+    event: React.ChangeEvent<HTMLInputElement>,
+    checked: boolean
+  ) => void;
   order: Order;
   orderBy: string;
   rowCount: number;
@@ -100,39 +145,53 @@ interface EnhancedTableProps {
 }
 
 function EnhancedTableHead(props: EnhancedTableProps) {
-  const { classes, onSelectAllClick, order, orderBy, numSelected, rowCount, onRequestSort, completed } = props;
-  const createSortHandler = (property: keyof Data) => (event: React.MouseEvent<unknown>) => {
+  const {
+    classes,
+    onSelectAllClick,
+    order,
+    orderBy,
+    numSelected,
+    rowCount,
+    onRequestSort,
+    completed
+  } = props;
+  const createSortHandler = (property: keyof Data) => (
+    event: React.MouseEvent<unknown>
+  ) => {
     onRequestSort(event, property);
   };
 
   return (
     <TableHead>
       <TableRow>
-      {completed ?
-        <TableCell padding="checkbox">
-          <Checkbox
-            indeterminate={numSelected > 0 && numSelected < rowCount}
-            checked={rowCount > 0 && numSelected === rowCount}
-            onChange={onSelectAllClick}
-            inputProps={{ 'aria-label': 'select all' }}
-          />
-        </TableCell>:<TableCell></TableCell>}
+        {completed ? (
+          <TableCell padding="checkbox">
+            <Checkbox
+              indeterminate={numSelected > 0 && numSelected < rowCount}
+              checked={rowCount > 0 && numSelected === rowCount}
+              onChange={onSelectAllClick}
+              inputProps={{ "aria-label": "select all" }}
+            />
+          </TableCell>
+        ) : (
+          <TableCell></TableCell>
+        )}
         {headCells.map(headCell => (
           <TableCell
             key={headCell.id}
-            align={headCell.numeric ? 'right' : 'left'}
-            padding={headCell.disablePadding ? 'none' : 'default'}
+            align={headCell.numeric ? "right" : "left"}
+            padding={headCell.disablePadding ? "none" : "default"}
             sortDirection={orderBy === headCell.id ? order : false}
           >
             <TableSortLabel
               active={orderBy === headCell.id}
-              direction={orderBy === headCell.id ? order : 'asc'}
+              direction={orderBy === headCell.id ? order : "asc"}
               onClick={createSortHandler(headCell.id)}
             >
               {headCell.label}
               {orderBy === headCell.id ? (
                 <span className={classes.visuallyHidden}>
-                  {order === 'desc' ? 'sorted descending' : 'sorted ascending'}
+                  {order === "desc" ? "sorted descending" : "sorted ascending"}
                 </span>
               ) : null}
             </TableSortLabel>
@@ -147,28 +206,29 @@ const useToolbarStyles = makeStyles((theme: Theme) =>
   createStyles({
     root: {
       paddingLeft: theme.spacing(2),
-      paddingRight: theme.spacing(1),
+      paddingRight: theme.spacing(1)
     },
     highlight:
-      theme.palette.type === 'light'
+      theme.palette.type === "light"
         ? {
-          color: theme.palette.secondary.main,
-          backgroundColor: lighten(theme.palette.secondary.light, 0.85),
-        }
+            color: theme.palette.secondary.main,
+            backgroundColor: lighten(theme.palette.secondary.light, 0.85)
+          }
         : {
-          color: theme.palette.text.primary,
-          backgroundColor: theme.palette.secondary.dark,
-        },
+            color: theme.palette.text.primary,
+            backgroundColor: theme.palette.secondary.dark
+          },
     title: {
-      flex: '1 1 100%',
-    },
-  }),
+      flex: "1 1 100%"
+    }
+  })
 );
 
 interface EnhancedTableToolbarProps {
   meetingIdsSelected: String[];
   meetingNamesSelected: String[];
   completed: boolean;
+  currentUser: any;
 }
 
 const EnhancedTableToolbar = (props: EnhancedTableToolbarProps) => {
@@ -178,45 +238,57 @@ const EnhancedTableToolbar = (props: EnhancedTableToolbarProps) => {
   let popUpTitle = "Sending " + numSelected + " minute(s)";
   let dialogText = "";
   let successfulRes = 0;
-  const requestButtonHandler = () => {
+  const requestButtonHandler = async () => {
     if (numSelected) {
       handleClickOpen();
+      const getUserIdToken = async () => {
+        if (props.currentUser) {
+          try {
+            const token = await props.currentUser.getIdToken(false);
+            return token;
+          } catch (e) {
+            console.log(e);
+          }
+        }
+      };
+      const authorizationHeaderValue: string =
+        "Bearer " + (await getUserIdToken());
+      const headers: Headers = new Headers();
+      headers.append("Authorization", authorizationHeaderValue);
+      headers.append("Accept", "application/json");
+      headers.append("Content-Type", "application/json");
       // send requests to all selected meetings
-      for (let i = 0; i < (meetingIdsSelected).length; i++) {
+      for (let i = 0; i < meetingIdsSelected.length; i++) {
         fetch(postURL, {
-          method: 'POST',
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-          },
+          method: "POST",
+          headers: headers,
           body: JSON.stringify({
-            'meetingId': meetingIdsSelected[i],
-            'meetingName': meetingNamesSelected[i],
+            meetingId: meetingIdsSelected[i],
+            meetingName: meetingNamesSelected[i]
           })
         })
           .then(res => handleResponse(res))
-          .catch(err => handleError(err))
+          .catch(err => handleError(err));
       }
     }
   };
 
-
-  const handleResponse = (res) => {
+  const handleResponse = res => {
     successfulRes++;
     if (successfulRes === numSelected) {
       showSuccessDialog();
     }
-  }
+  };
 
-  const handleError = (err) => {
+  const handleError = err => {
     handleClose();
     setOpenErrorAlert(true);
-  }
+  };
 
   const showSuccessDialog = () => {
     handleClose();
     setOpenSuccessAlert(true);
-  }
+  };
 
   const [open, setOpen] = React.useState(false);
   const [openSuccessAlert, setOpenSuccessAlert] = React.useState(false);
@@ -241,150 +313,202 @@ const EnhancedTableToolbar = (props: EnhancedTableToolbarProps) => {
 
   return (
     <div>
-      {completed ? 
-      <Toolbar
-        className={clsx(classes.root, {
-          [classes.highlight]: numSelected > 0,
-        })}
-      >
-        {numSelected > 0 ? (
-          <Typography className={classes.title} color="inherit" variant="subtitle1">
-            {numSelected} selected
-        </Typography>
-        ) : (
+      {completed ? (
+        <Toolbar
+          className={clsx(classes.root, {
+            [classes.highlight]: numSelected > 0
+          })}
+        >
+          {numSelected > 0 ? (
+            <Typography
+              className={classes.title}
+              color="inherit"
+              variant="subtitle1"
+            >
+              {numSelected} selected
+            </Typography>
+          ) : (
             <Typography className={classes.title} variant="h6" id="tableTitle">
               Meeting Minutes
-        </Typography>
+            </Typography>
           )}
-        <div onClick={event => requestButtonHandler()}>
-          <IconButton aria-label="disabled" disabled={numSelected <= 0}>
-            <MailOutlineIcon />
-          </IconButton>
-        </div>
-        <Dialog
-          open={open}
-          onClose={handleClose}
-          aria-labelledby="alert-dialog-title"
-          aria-describedby="alert-dialog-description"
-        >
-          <DialogTitle id="alert-dialog-title">{popUpTitle}</DialogTitle>
-          <DialogContent>
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <CircularProgress />
-            </div>
-            <DialogContentText id="alert-dialog-description">{dialogText}</DialogContentText>
-          </DialogContent>
-        </Dialog>
+          <div onClick={() => requestButtonHandler()}>
+            <IconButton aria-label="disabled" disabled={numSelected <= 0}>
+              <MailOutlineIcon style={{ fontSize: 35 }} />
+            </IconButton>
+          </div>
+          <Dialog
+            open={open}
+            onClose={handleClose}
+            aria-labelledby="alert-dialog-title"
+            aria-describedby="alert-dialog-description"
+          >
+            <DialogTitle id="alert-dialog-title">{popUpTitle}</DialogTitle>
+            <DialogContent>
+              <div style={{ display: "flex", justifyContent: "center" }}>
+                <CircularProgress />
+              </div>
+              <DialogContentText id="alert-dialog-description">
+                {dialogText}
+              </DialogContentText>
+            </DialogContent>
+          </Dialog>
 
-        <Dialog
-          open={openSuccessAlert}
-          onClose={handleCloseSuccessAlert}
-          aria-labelledby="alert-dialog-title"
-          aria-describedby="alert-dialog-description"
-        >
-          <DialogContent>
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <Alert icon={<CheckIcon fontSize="inherit" />} severity="success">
-                Success
-               </Alert>
-            </div>
-            <DialogContentText id="alert-dialog-description">{dialogText}</DialogContentText>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleCloseSuccessAlert} color="primary">
-              OK
-          </Button>
-          </DialogActions>
-        </Dialog>
+          <Dialog
+            open={openSuccessAlert}
+            onClose={handleCloseSuccessAlert}
+            aria-labelledby="alert-dialog-title"
+            aria-describedby="alert-dialog-description"
+          >
+            <DialogContent>
+              <div style={{ display: "flex", justifyContent: "center" }}>
+                <Alert
+                  icon={<CheckIcon fontSize="inherit" />}
+                  severity="success"
+                >
+                  Success
+                </Alert>
+              </div>
+              <DialogContentText id="alert-dialog-description">
+                {dialogText}
+              </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={handleCloseSuccessAlert} color="primary">
+                OK
+              </Button>
+            </DialogActions>
+          </Dialog>
 
-        <Dialog
-          open={openErrorAlert}
-          onClose={handleCloseErrorAlert}
-          aria-labelledby="alert-dialog-title"
-          aria-describedby="alert-dialog-description"
-        >
-          <DialogContent>
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <Alert severity="error">An error has occured</Alert>
-            </div>
-            <DialogContentText id="alert-dialog-description">{dialogText}</DialogContentText>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleCloseErrorAlert} color="primary">
-              OK
-          </Button>
-          </DialogActions>
-        </Dialog>
-      </Toolbar>:
-      <Toolbar>
-        <Typography className={classes.title} variant="h6" id="tableTitle">
-          In-Progress Transcriptions
-        </Typography>
-        </Toolbar>}
+          <Dialog
+            open={openErrorAlert}
+            onClose={handleCloseErrorAlert}
+            aria-labelledby="alert-dialog-title"
+            aria-describedby="alert-dialog-description"
+          >
+            <DialogContent>
+              <div style={{ display: "flex", justifyContent: "center" }}>
+                <Alert severity="error">An error has occured</Alert>
+              </div>
+              <DialogContentText id="alert-dialog-description">
+                {dialogText}
+              </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={handleCloseErrorAlert} color="primary">
+                OK
+              </Button>
+            </DialogActions>
+          </Dialog>
+        </Toolbar>
+      ) : (
+        <Toolbar>
+          <Typography className={classes.title} variant="h6" id="tableTitle">
+            In-Progress Transcriptions
+          </Typography>
+        </Toolbar>
+      )}
     </div>
   );
 };
 
-
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
     root: {
-      width: '100%',
+      width: "100%"
     },
     paper: {
-      width: '100%',
-      marginBottom: theme.spacing(2),
+      width: "100%",
+      marginBottom: theme.spacing(2)
     },
     table: {
-      minWidth: 950,
+      minWidth: 950
       //maxWidth:1500,
     },
     visuallyHidden: {
       border: 0,
-      clip: 'rect(0 0 0 0)',
+      clip: "rect(0 0 0 0)",
       height: 1,
       margin: -1,
-      overflow: 'hidden',
+      overflow: "hidden",
       padding: 0,
-      position: 'absolute',
+      position: "absolute",
       top: 20,
-      width: 1,
-    },
-  }),
+      width: 1
+    }
+  })
 );
 
-export function MyTable(url: {from: string, completed: boolean}) {
+const EnhancedTableToolbarWithRedux = connect(mapStateToProps)(
+  EnhancedTableToolbar
+);
+
+function MyTable(props: {
+  from: string;
+  completed: boolean;
+  currentUser: any;
+}) {
   const classes = useStyles();
-  const [order, setOrder] = React.useState<Order>('desc');
-  const [orderBy, setOrderBy] = React.useState<keyof Data>('meetingId');
+  const [order, setOrder] = React.useState<Order>("desc");
+  const [orderBy, setOrderBy] = React.useState<keyof Data>("meetingId");
   const [selected, setSelected] = React.useState<string[]>([]);
-  const [selectedMeetingNames, setSelectedMeetingNames] = React.useState<string[]>([]);
+  const [selectedMeetingNames, setSelectedMeetingNames] = React.useState<
+    string[]
+  >([]);
   const [page, setPage] = React.useState(0);
-  const [rowsPerPage, setRowsPerPage] = React.useState((10));
+  const [rowsPerPage, setRowsPerPage] = React.useState(10);
   const [meetings, setMeetings] = React.useState<Data[]>([]);
   const [count, setCount] = React.useState(0);
   const [loading, setLoading] = React.useState<Boolean>(true);
 
-  useEffect( () => {
+  useEffect(() => {
     fetchMeetings().then(res => setMeetings(meetings.concat(res)));
     setLoading(false);
   }, [loading]);
 
-  const fetchMeetings = async ()  => {
-    let res = await fetch(url.from + `&page=${page}`);
+  const fetchMeetings = async () => {
+    const requestUrl = props.from + `&page=${page}`;
+    const getUserIdToken = async () => {
+      if (props.currentUser) {
+        try {
+          const token = await props.currentUser.getIdToken(false);
+          return token;
+        } catch (e) {
+          console.log(e);
+        }
+      }
+    };
+    const authorizationHeaderValue: string =
+      "Bearer " + (await getUserIdToken());
+    const header: Headers = new Headers();
+    header.append("Authorization", authorizationHeaderValue);
+    let res = await fetch(requestUrl, {
+      method: "GET",
+      headers: header
+    });
     let buf = await res.json();
 
     setCount(buf.total);
-    let data:Data[] = Object.values(buf.data);
-    data = data.map(el => createData(el.meetingId, el.meetingName, el.meetingDate, el.organizerUserName));
-    // maybe add some error checking 
+    let data: Data[] = Object.values(buf.data);
+    data = data.map(el =>
+      createData(
+        el.meetingId,
+        el.meetingName,
+        el.meetingDate,
+        el.organizerEmail
+      )
+    );
+    // maybe add some error checking
 
     return data;
-  }
+  };
 
-  const handleRequestSort = (event: React.MouseEvent<unknown>, property: keyof Data) => {
-    const isAsc = orderBy === property && order === 'asc';
-    setOrder(isAsc ? 'desc' : 'asc');
+  const handleRequestSort = (
+    event: React.MouseEvent<unknown>,
+    property: keyof Data
+  ) => {
+    const isAsc = orderBy === property && order === "asc";
+    setOrder(isAsc ? "desc" : "asc");
     setOrderBy(property);
   };
 
@@ -400,32 +524,36 @@ export function MyTable(url: {from: string, completed: boolean}) {
     setSelectedMeetingNames([]);
   };
 
-  const handleClick = (event: React.MouseEvent<unknown>, id: string, name: string) => {
+  const handleClick = (
+    event: React.MouseEvent<unknown>,
+    id: string,
+    name: string
+  ) => {
     const selectedIndex = selected.indexOf(id);
 
     let newSelected: string[] = [];
     let newNameSelected: string[] = [];
 
-    if (selectedIndex === -1) { // if the selected row is not selected already
+    if (selectedIndex === -1) {
+      // if the selected row is not selected already
       newSelected = newSelected.concat(selected, id);
       newNameSelected = newNameSelected.concat(selectedMeetingNames, name);
-
     } else if (selectedIndex === 0) {
       newSelected = newSelected.concat(selected.slice(1));
       newNameSelected = newNameSelected.concat(selectedMeetingNames.slice(1));
-
     } else if (selectedIndex === selected.length - 1) {
       newSelected = newSelected.concat(selected.slice(0, -1));
-      newNameSelected = newNameSelected.concat(selectedMeetingNames.slice(0, -1));
-
+      newNameSelected = newNameSelected.concat(
+        selectedMeetingNames.slice(0, -1)
+      );
     } else if (selectedIndex > 0) {
       newSelected = newSelected.concat(
         selected.slice(0, selectedIndex),
-        selected.slice(selectedIndex + 1),
+        selected.slice(selectedIndex + 1)
       );
       newNameSelected = newNameSelected.concat(
         selectedMeetingNames.slice(0, selectedIndex),
-        selectedMeetingNames.slice(selectedIndex + 1),
+        selectedMeetingNames.slice(selectedIndex + 1)
       );
     }
     setSelected(newSelected);
@@ -433,99 +561,137 @@ export function MyTable(url: {from: string, completed: boolean}) {
   };
 
   const handleChangePage = (event: unknown, newPage: number) => {
-    if ((meetings.length)/10 < newPage+1) { // if have not loaded the meetings on this page
+    if (meetings.length / 10 < newPage + 1) {
+      // if have not loaded the meetings on this page
       setLoading(true);
     }
     setPage(newPage);
   };
 
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
 
   const isSelected = (name: any) => selected.indexOf(name) !== -1;
 
-  const emptyRows = rowsPerPage - Math.min(rowsPerPage, meetings.length - page * rowsPerPage);
+  const emptyRows =
+    rowsPerPage - Math.min(rowsPerPage, meetings.length - page * rowsPerPage);
 
   return (
-    <div style={{margin: '0px 0px', borderRadius: "25px", backgroundColor:"e62020"}}
-                    className="p-5 shadow-lg ">
-    <div className={classes.root}>
-      <Paper className={classes.paper}>
-        <EnhancedTableToolbar meetingIdsSelected={selected} meetingNamesSelected={selectedMeetingNames} completed={url.completed}/>
-        <TableContainer>
-        {loading ?  <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <CircularProgress />
-            </div> : 
-          <Table
-            className={classes.table}
-            aria-labelledby="tableTitle"
-            aria-label="enhanced table"
-          >
-            <EnhancedTableHead
-              classes={classes}
-              numSelected={selected.length}
-              order={order}
-              orderBy={orderBy}
-              onSelectAllClick={handleSelectAllClick}
-              onRequestSort={handleRequestSort}
-              rowCount={meetings.length}
-              completed={url.completed}
-            />
-            <TableBody>
-              {stableSort(meetings, getComparator(order, orderBy))
-                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map((meeting, index) => {
-                  const isItemSelected = isSelected(meeting.meetingId);
-                  const labelId = `enhanced-table-checkbox-${index}`;
+    <div
+      style={{
+        margin: "0px 0px",
+        borderRadius: "25px",
+        backgroundColor: "e62020"
+      }}
+      className="p-5 shadow-lg "
+    >
+      <div className={classes.root}>
+        <Paper className={classes.paper}>
+          <EnhancedTableToolbarWithRedux
+            meetingIdsSelected={selected}
+            meetingNamesSelected={selectedMeetingNames}
+            completed={props.completed}
+          />
+          <TableContainer>
+            {loading ? (
+              <div style={{ display: "flex", justifyContent: "center" }}>
+                <CircularProgress />
+              </div>
+            ) : (
+              <Table
+                className={classes.table}
+                aria-labelledby="tableTitle"
+                aria-label="enhanced table"
+              >
+                <EnhancedTableHead
+                  classes={classes}
+                  numSelected={selected.length}
+                  order={order}
+                  orderBy={orderBy}
+                  onSelectAllClick={handleSelectAllClick}
+                  onRequestSort={handleRequestSort}
+                  rowCount={meetings.length}
+                  completed={props.completed}
+                />
+                <TableBody>
+                  {stableSort(meetings, getComparator(order, orderBy))
+                    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                    .map((meeting, index) => {
+                      const isItemSelected = isSelected(meeting.meetingId);
+                      const labelId = `enhanced-table-checkbox-${index}`;
 
-                  return (
-                    <TableRow
-                      hover
-                      onClick={event => handleClick(event, meeting.meetingId, meeting.meetingName)}
-                      role="checkbox"
-                      aria-checked={isItemSelected}
-                      tabIndex={-1}
-                      key={meeting.meetingId}
-                      selected={isItemSelected}
-                    >
-                    {url.completed ?
-                      <TableCell padding="checkbox">
-                        <Checkbox
-                          checked={isItemSelected}
-                          inputProps={{ 'aria-labelledby': labelId }}
-                        />
-                      </TableCell>: <TableCell></TableCell>}
-                      <TableCell component="th" id={labelId} scope="row" padding="none">
-                        {meeting.meetingId}
-                      </TableCell>
-                      <TableCell align="right">{meeting.meetingName}</TableCell>
-                      <TableCell align="right">{meeting.meetingDate}</TableCell>
-                      <TableCell align="right">{meeting.organizerUserName}</TableCell>
+                      return (
+                        <TableRow
+                          hover
+                          onClick={event =>
+                            handleClick(
+                              event,
+                              meeting.meetingId,
+                              meeting.meetingName
+                            )
+                          }
+                          role="checkbox"
+                          aria-checked={isItemSelected}
+                          tabIndex={-1}
+                          key={meeting.meetingId}
+                          selected={isItemSelected}
+                        >
+                          {props.completed ? (
+                            <TableCell padding="checkbox">
+                              <Checkbox
+                                checked={isItemSelected}
+                                inputProps={{ "aria-labelledby": labelId }}
+                              />
+                            </TableCell>
+                          ) : (
+                            <TableCell></TableCell>
+                          )}
+                          <TableCell
+                            component="th"
+                            id={labelId}
+                            scope="row"
+                            padding="none"
+                          >
+                            {meeting.meetingId}
+                          </TableCell>
+                          <TableCell align="right">
+                            {meeting.meetingName}
+                          </TableCell>
+                          <TableCell align="right">
+                            {meeting.meetingDate}
+                          </TableCell>
+                          <TableCell align="right">
+                            {meeting.organizerEmail}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  {emptyRows > 0 && (
+                    <TableRow style={{ height: 33 * emptyRows }}>
+                      <TableCell colSpan={6} />
                     </TableRow>
-                  );
-                })}
-              {emptyRows > 0 && (
-                <TableRow style={{ height: 33 * emptyRows }}>
-                  <TableCell colSpan={6} />
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        }
-        </TableContainer>
-        <TablePagination
-          rowsPerPageOptions={[10]}
-          component="div"
-          count={count}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onChangePage={handleChangePage}
-          onChangeRowsPerPage={handleChangeRowsPerPage}
-        />
-      </Paper>
-    </div>
+                  )}
+                </TableBody>
+              </Table>
+            )}
+          </TableContainer>
+          <TablePagination
+            rowsPerPageOptions={[10]}
+            component="div"
+            count={count}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onChangePage={handleChangePage}
+            onChangeRowsPerPage={handleChangeRowsPerPage}
+          />
+        </Paper>
+      </div>
     </div>
   );
 }
+
+export default connect(mapStateToProps)(MyTable);
