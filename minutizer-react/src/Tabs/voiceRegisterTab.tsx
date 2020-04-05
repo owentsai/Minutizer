@@ -7,7 +7,9 @@ import { connect } from "react-redux";
 
 interface VoiceRegisterTabStates {
   record: boolean;
+  seconds: number;
 }
+
 class VoiceRegisterTab extends Component<
   { currentUser },
   VoiceRegisterTabStates
@@ -15,10 +17,29 @@ class VoiceRegisterTab extends Component<
   constructor(props) {
     super(props);
     this.state = {
-      record: false
+      record: false,
+      seconds: 0
     };
-
     this.registerVoice = this.registerVoice.bind(this);
+  }
+
+  componentDidMount() {
+    setInterval(() => {
+      let currseconds: number = this.state.seconds;
+      if (this.state.seconds >= 29) {
+        this.stopRecording();
+      }
+
+      if (this.state.record) {
+        this.setState({
+          seconds: currseconds + 1
+        });
+      } else {
+        this.setState({
+          seconds: 0
+        });
+      }
+    }, 1000);
   }
 
   startRecording = () => {
@@ -142,6 +163,7 @@ class VoiceRegisterTab extends Component<
             backgroundColor="#262626"
             mimeType="audio/flac"
           />
+          <div>{this.state.seconds} seconds</div>
           <div
             className="p-1"
             style={{ border: "2px solid black", borderRadius: "50%" }}
