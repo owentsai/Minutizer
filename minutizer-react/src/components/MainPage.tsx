@@ -20,51 +20,10 @@ class MainPage extends Component<{}> {
         <div className="mt-3">
           <Tabs>
             <TabList>
-              <Tab
-                style={{
-                  borderTopLeftRadius: "15px",
-                  borderTopRightRadius: "15px",
-                  marginTop: "5px",
-                  marginLeft: "15px",
-                  fontWeight: "bold",
-                  fontSize: "20px"
-                }}
-              >
-                Upload Audio
-              </Tab>
-              <Tab
-                style={{
-                  borderTopLeftRadius: "15px",
-                  borderTopRightRadius: "15px",
-                  marginTop: "5px",
-                  fontWeight: "bold",
-                  fontSize: "20px"
-                }}
-              >
-                Register Voice
-              </Tab>
-              <Tab
-                style={{
-                  borderTopLeftRadius: "15px",
-                  borderTopRightRadius: "15px",
-                  marginTop: "5px",
-                  fontWeight: "bold",
-                  fontSize: "20px"
-                }}
-              >
-                Request Minutes
-              </Tab>
-              <Tab
-                style={{
-                  borderTopLeftRadius: "15px",
-                  borderTopRightRadius: "15px",
-                  marginTop: "5px",
-                  fontWeight: "bold",
-                  fontSize: "20px"
-                }}
-              >
-                In Progress Requests
-              </Tab>
+              <Tab>Upload Audio</Tab>
+              <Tab>Register Voice</Tab>
+              <Tab>Request Minutes</Tab>
+              <Tab>In Progress Requests</Tab>
             </TabList>
             <TabPanel>
               <UploadAudio />
@@ -73,16 +32,16 @@ class MainPage extends Component<{}> {
               <VoiceRegisterTab />
             </TabPanel>
             <TabPanel>
-                  <MyTable
-                    from={this.inProgressTranscriptionURL}
-                    completed={false}
-                  />
+              <MyTable
+                from={this.inProgressTranscriptionURL}
+                completed={false}
+              />
             </TabPanel>
             <TabPanel>
-                  <MyTable
-                    from={this.completedTranscriptionURL}
-                    completed={true}
-                  />
+              <MyTable
+                from={this.completedTranscriptionURL}
+                completed={true}
+              />
             </TabPanel>
           </Tabs>
         </div>
