@@ -1,5 +1,4 @@
 import React from "react";
-import AttendeesComponent from "./AttendeesComponent";
 import { toast } from "react-toastify";
 import { css } from "glamor";
 import CloudUploadIcon from "@material-ui/icons/CloudUpload";
@@ -7,6 +6,7 @@ import Button from "@material-ui/core/Button";
 import "react-toastify/dist/ReactToastify.css";
 import TextField from "@material-ui/core/TextField";
 import { connect } from "react-redux";
+import AsyncSelect from 'react-select/async';
 
 toast.configure();
 
@@ -21,7 +21,6 @@ interface inputProps {
 
 class MetaFields extends React.Component<{ currentUser }, inputProps> {
   private fileInput = React.createRef<HTMLInputElement>();
-  private attendeesComponent = React.createRef<AttendeesComponent>();
   private toastId: any = null;
   constructor(props: any) {
     super(props);
@@ -39,21 +38,17 @@ class MetaFields extends React.Component<{ currentUser }, inputProps> {
     this.handleFileSubmit = this.handleFileSubmit.bind(this);
     this.handleChangeMeetingName = this.handleChangeMeetingName.bind(this);
     this.handleChangeDate = this.handleChangeDate.bind(this);
-    this.handleAttendeeNameChange = this.handleAttendeeNameChange.bind(this);
-    this.handleAddAttendee = this.handleAddAttendee.bind(this);
-    this.handleRemoveAttendee = this.handleRemoveAttendee.bind(this);
   }
 
   handleChangeOrganizer(event: any) {
     this.setState({ organizer: event.target.value });
   }
+
   handleChangeDate(event: any) {
     let date = event.target.value;
     let dateArr = date.split("-");
     let userDate = new Date(dateArr[0], dateArr[1] - 1, dateArr[2]);
-    console.log(userDate);
     let currentDate = new Date();
-    console.log(currentDate);
     if (userDate > currentDate) {
       toast.error(<div>INVALID DATE SELECTED!</div>, {
         position: "top-center",
@@ -65,52 +60,55 @@ class MetaFields extends React.Component<{ currentUser }, inputProps> {
       });
       //Reset to default date
       this.setState({ meetingDate: "2020-01-01" });
-      // @ts-ignore
-      document.getElementById("date").value = "2020-01-01";
     } else {
       this.setState({ meetingDate: date });
     }
-    // console.log(childValue);
   }
 
   handleChangeStartTime(event: any) {
     this.setState({ startTime: event.target.value });
-    // console.log(childValue);
   }
 
   handleChangeEndTime(event: any) {
     this.setState({ endTime: event.target.value });
-    // console.log(childValue);
   }
 
   handleChangeMeetingName(event: any) {
     this.setState({ meetingName: event.target.value });
   }
 
-  handleAttendeeNameChange(idx: any, evt: any) {
-    const name: string = evt.target.value;
-    const newShareholders = this.state.attendees.map(
-      (shareholder: any, sidx: any) => {
-        if (idx !== sidx) return shareholder;
-        return { ...shareholder, name };
+  getUserIdToken = async () => {
+    if (this.props.currentUser) {
+      try {
+        const token = await this.props.currentUser.getIdToken(false);
+        return token;
+      } catch (e) {
+        console.log(e);
       }
-    );
-    this.setState({ attendees: newShareholders });
-  }
-
-  handleAddAttendee = () => {
-    this.setState({
-      attendees: this.state.attendees.concat([{ name: "" }])
-    });
+    }
   };
 
-  handleRemoveAttendee(idx: any) {
-    this.setState({
-      attendees: this.state.attendees.filter(
-        (s: any, sidx: any) => idx !== sidx
-      )
+  loadAttendees = async (inputValue) => {
+    const token = await this.getUserIdToken();
+    return new Promise(function(fulfill, reject) {
+      let url = "https://us-central1-hacksbc-268409.cloudfunctions.net/attendees";
+      if (inputValue && inputValue !== "") {
+        url = url + "?search=" + inputValue
+      }
+      const request = new XMLHttpRequest();
+      const authorizationValue: string = "Bearer " + token;
+      request.open("GET", url, true);
+      request.setRequestHeader("Authorization", authorizationValue);
+      request.onload = function() {
+        const res = JSON.parse(request.response)
+        fulfill(res.data);
+      };
+      request.onerror = function() {
+        reject("The request failed");
+      };
+      request.send();
     });
-  }
+  };
 
   handleFileSubmit(event: any): boolean {
     try {
@@ -281,17 +279,7 @@ class MetaFields extends React.Component<{ currentUser }, inputProps> {
 
   //HTTP request using XMLHTTP
   async getSignedURL(metadata: any) {
-    const getUserIdToken = async () => {
-      if (this.props.currentUser) {
-        try {
-          const token = await this.props.currentUser.getIdToken(false);
-          return token;
-        } catch (e) {
-          console.log(e);
-        }
-      }
-    };
-    const token = await getUserIdToken();
+    const token = await this.getUserIdToken();
     return new Promise(function(fulfill, reject) {
       const URL =
         "https://us-central1-hacksbc-268409.cloudfunctions.net/upload_audio";
@@ -358,6 +346,7 @@ class MetaFields extends React.Component<{ currentUser }, inputProps> {
                 label="Date"
                 type="date"
                 defaultValue="2020-01-01"
+                value={this.state.meetingDate}
                 InputLabelProps={{
                   shrink: true
                 }}
@@ -374,6 +363,7 @@ class MetaFields extends React.Component<{ currentUser }, inputProps> {
                 label="Time"
                 type="time"
                 defaultValue="00:00:00"
+                value={this.state.startTime}
                 InputLabelProps={{
                   shrink: true
                 }}
@@ -390,6 +380,7 @@ class MetaFields extends React.Component<{ currentUser }, inputProps> {
                 label="Time"
                 type="time"
                 defaultValue="00:00:00"
+                value={this.state.endTime}
                 InputLabelProps={{
                   shrink: true
                 }}
@@ -398,13 +389,15 @@ class MetaFields extends React.Component<{ currentUser }, inputProps> {
             </label>
           </div>
         </div>
+        <AsyncSelect
+          defaultOptions
+          isMulti
+          loadOptions={this.loadAttendees}
+          getOptionLabel={option => option.email}
+          getOptionValue={option => option.email}
+          >
+        </AsyncSelect>
 
-        <AttendeesComponent
-          parentCallback1={this.handleAddAttendee}
-          parentCallback2={this.handleRemoveAttendee}
-          parentCallback3={this.handleAttendeeNameChange}
-          ref={this.attendeesComponent}
-        ></AttendeesComponent>
         <br />
         <div className="form-row mb-3 mt-4">
           <input
@@ -430,13 +423,6 @@ class MetaFields extends React.Component<{ currentUser }, inputProps> {
   }
 
   private resetForm() {
-    // @ts-ignore
-    document.getElementById("uploadAudioForm").reset();
-    // @ts-ignore
-    document.getElementById("meetingName").value = "";
-    // @ts-ignore
-    document.getElementById("organizerName").value = "";
-
     this.setState({
       organizer: "",
       startTime: "00:00",
@@ -445,7 +431,6 @@ class MetaFields extends React.Component<{ currentUser }, inputProps> {
       meetingDate: "2020-01-01",
       attendees: []
     });
-
     // @ts-ignore
     this.attendeesComponent.current.resetState();
   }
