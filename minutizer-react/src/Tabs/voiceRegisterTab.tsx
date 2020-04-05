@@ -2,12 +2,15 @@ import React, { Component } from "react";
 import { ReactMic } from "react-mic";
 import MicIcon from "@material-ui/icons/Mic";
 import StopIcon from "@material-ui/icons/Stop";
-import IconButton from "@material-ui/core/IconButton";
+import TimerIcon from "@material-ui/icons/Timer";
+import Button from '@material-ui/core/Button';
 import { connect } from "react-redux";
 
 interface VoiceRegisterTabStates {
   record: boolean;
-  seconds: number;
+  timer: number;
+  start: boolean,
+  countdownTimer: number,
 }
 
 class VoiceRegisterTab extends Component<
@@ -17,44 +20,66 @@ class VoiceRegisterTab extends Component<
   constructor(props) {
     super(props);
     this.state = {
-      record: false,
-      seconds: 0
+        start: false,
+        record: false,
+        countdownTimer: 3,
+        timer: 0
     };
     this.registerVoice = this.registerVoice.bind(this);
   }
 
   componentDidMount() {
     setInterval(() => {
-      let currseconds: number = this.state.seconds;
-      if (this.state.seconds >= 29) {
-        this.stopRecording();
-      }
-
-      if (this.state.record) {
-        this.setState({
-          seconds: currseconds + 1
-        });
-      } else {
-        this.setState({
-          seconds: 0
-        });
-      }
+        let currTime: number = this.state.timer;
+        let currCountdown: number = this.state.countdownTimer;
+    
+        if (this.state.start || this.state.record) {
+            if (this.state.start) {
+                if (this.state.countdownTimer == 0) {
+                    this.startRecording();
+                } else {
+                    this.setState({
+                        countdownTimer: currCountdown-1
+                    });
+                }
+            } else if (this.state.record) {
+                if (this.state.timer >= 30) {
+                    this.stopRecording();
+                } else {
+                    this.setState({
+                        timer: currTime+1
+                    });
+                } 
+            }
+        } else {
+            this.setState({
+                timer: 0,
+                countdownTimer: 3
+            });
+        }   
     }, 1000);
-  }
+    }
 
-  startRecording = () => {
-    this.setState({
-      record: true
-    });
-  };
-  stopRecording = () => {
-    this.setState({
-      record: false
-    });
-  };
-  onData(recordedBlob) {
-    console.log("chunk of real-time data is: ", recordedBlob);
-  }
+    startButtonHandler = () => {
+        this.setState({
+            start: true,
+        });
+    }
+
+    startRecording = () => {
+        this.setState({
+            countdownTimer: 3,
+            record: true,
+            start: false,
+            });
+    } 
+
+
+    stopRecording = () => {
+        this.setState({
+            record: false
+        });
+    }
 
   async registerVoice(recordedBlob) {
     const metadata = {
@@ -147,88 +172,62 @@ class VoiceRegisterTab extends Component<
   }
 
   render() {
-    return (
-      <div
-        style={{ margin: "50px 150px", borderRadius: "25px" }}
-        className="p-3 shadow-lg"
-      >
-        <div className="d-flex flex-column align-items-center">
-          <h3>Your Voice Enrolment Status: [Insert Status]</h3>
-          <ReactMic
-            record={this.state.record}
-            onStop={this.registerVoice}
-            onData={this.onData}
-            className="d-flex align-self-stretch rounded-lg m-3"
-            strokeColor="#3944BC"
-            backgroundColor="#262626"
-            mimeType="audio/flac"
-          />
-          <div>{this.state.seconds} seconds</div>
-          <div
-            className="p-1"
-            style={{ border: "2px solid black", borderRadius: "50%" }}
-          >
-            {!this.state.record ? (
-              <IconButton
-                style={{ border: "2px solid" }}
-                aria-label="record"
-                color="secondary"
-                onClick={this.startRecording}
-              >
-                <MicIcon fontSize="large" />
-              </IconButton>
-            ) : (
-              <IconButton
-                style={{ border: "2px solid" }}
-                aria-label="stop"
-                color="secondary"
-                onClick={this.stopRecording}
-              >
-                <StopIcon fontSize="large" />
-              </IconButton>
-            )}
-          </div>
-          <span className="font-weight-bold">
-            Click mic icon and read out loud the following phrases, then click
-            stop to register voice
-          </span>
-          <text>
-            <em>Oak is strong and also gives shade.</em>
-          </text>
-          <text>
-            <em>Cats and dogs each hate the other.</em>
-          </text>
-          <text>
-            <em>The pipe began to rust while new.</em>
-          </text>
-          <text>
-            <em>Open the crate but don't break the glass.</em>
-          </text>
-          <text>
-            <em>Add the sum to the product of these three.</em>
-          </text>
-          <text>
-            <em>Thieves who rob friends deserve jail.</em>
-          </text>
-          <text>
-            <em>The ripe taste of cheese improves with age.</em>
-          </text>
-          <text>
-            <em>Act on these orders with great speed.</em>
-          </text>
-          <text>
-            <em>The ripe taste of cheese improves with age.</em>
-          </text>
-          <text>
-            <em>The hog crawled under the high fence.</em>
-          </text>
-          <text>
-            <em>Move the vat over the hot fire.</em>
-          </text>
+    var currButton;
+    var enrolButtonColor = (this.state.timer < 25) ? "bg-primary text-white" : "bg-warning text-white";
+    if(!this.state.start && !this.state.record) {
+        currButton = (<Button style={{width: '200px', height:'35px'}} variant='contained' color='secondary' startIcon={<MicIcon />} onClick={this.startButtonHandler}>START</Button>);
+    } else if (this.state.start) {
+        currButton = (<Button style={{width: '200px', height:'35px'}} variant='contained' className="bg-success text-white" startIcon={<TimerIcon />}>READY IN {this.state.countdownTimer}s</Button>);
+    } else {
+        currButton = (<Button style={{width: '200px', height:'35px'}} variant='contained' className={enrolButtonColor} startIcon={<StopIcon />} onClick={this.stopRecording}>ENROL {("0" + this.state.timer).slice(-2)}S</Button>);
+    }
+
+    return(
+        <div style={{margin: '50px 150px', borderRadius: "25px"}} 
+        className="p-3 shadow-lg">
+            <div className="d-flex flex-column align-items-center">
+                <h3>Your Voice Enrolment Status: [Insert Status]</h3>
+                <ReactMic
+                    record={this.state.record}
+                    onStop={this.registerVoice}
+                    className="d-flex align-self-stretch rounded-lg m-3"
+                    strokeColor="#3944BC"
+                    backgroundColor="#262626"
+                    mimeType="audio/flac"/>
+                <div className="pb-1">
+                    {/* <div className="p-1" style={{border: "2px solid black", borderRadius: "50%" }}> */}
+                    {currButton}
+                    {/* </div> */}
+                </div>
+            </div>
+            <div className="ml-5 mr-5">
+                <h3 className="font-weight-bold pb-3">INSTRUCTIONS: </h3>
+                <ol>
+                    <li className="pb-3">
+                        Read the two questions below and formulate an approximately 10-second response per question.
+                    </li>
+                    <li className="pb-3">
+                        Click <b>START</b> to start voice enrolment. There will be a 3-second countdown before the recording starts.
+                    </li>
+                    <li className="pb-3">
+                        Respond to the two questions and read the prompt shown below in your regular speaking rate and tone.  A timer will be displayed to help you plan your time and there is a time limit of 30 seconds.
+                    </li>
+                    <li className="pb-3">
+                        If you finish early, click <b>ENROL</b> to stop recording and register your voice to the system.  The recording will also stops in 30 seconds and your voice will be automatically registered.
+                    </li>
+                </ol>
+                <ul style={{listStyleType: "none"}}>
+                    <li><em><b>Question 1: </b>What do you plan to accomplish in the next 3 days?</em></li>
+                    <li><em><b>Question 2: </b>What did you have for dinner last night?</em></li>
+                    <li><em><b>Prompt: </b>For a given logic, such as first-order logic, the different
+                        derivation systems will give different explications of what it is for
+                        a sentence to be a theorem and what it means for a sentence to be
+                        derivable from some others.</em></li>
+                </ul>
+            </div>
         </div>
-      </div>
     );
-  }
+}
 }
 const mapStateToProps = ({ user }) => ({
   currentUser: user.currentUser
