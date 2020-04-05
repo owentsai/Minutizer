@@ -18,10 +18,7 @@ class VoiceRegisterTab extends Component {
         setInterval(() => {
             let currTime: number = this.state.timer;
             let currCountdown: number = this.state.countdownTimer;
-            // console.log("the countertimer is now:" + this.state.countdownTimer);
-            // console.log("start is: " + this.state.start);
-            // console.log("record is: " + this.state.record);
-            // console.log("the timer is: " + this.state.timer);
+        
             if (this.state.start || this.state.record) {
                 if (this.state.start) {
                     if (this.state.countdownTimer == 0) {
@@ -164,14 +161,14 @@ class VoiceRegisterTab extends Component {
                         strokeColor="#3944BC"
                         backgroundColor="#262626"
                         mimeType="audio/flac"/>
-                    <div className="pb-1 mb-1">
+                    <div className="pb-1">
                         {/* <div className="p-1" style={{border: "2px solid black", borderRadius: "50%" }}> */}
                         {currButton}
                         {/* </div> */}
                     </div>
                 </div>
                 <div className="ml-5 mr-5">
-                    <h3 className="font-weight-bold p-3">INSTRUCTIONS: </h3>
+                    <h3 className="font-weight-bold pb-3">INSTRUCTIONS: </h3>
                     <ol>
                         <li className="pb-3">
                             Read the two questions below and formulate an approximately 10-second response per question.
