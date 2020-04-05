@@ -1,9 +1,9 @@
 import React from "react";
 import { connect } from "react-redux";
 import { Route, Switch, Redirect } from "react-router-dom";
-import SignUp from "./components/SignUp/sign-up.component";
+import SignUp from "./components/SignUp/SignUp";
 import MainPage from "./components/MainPage";
-import SignIn from "./components/SignIn/sign-in.component";
+import SignIn from "./components/SignIn/SignIn";
 import { auth } from "./firebase/firebase.utils";
 import { setCurrentUser } from "./redux/user/user.actions";
 
