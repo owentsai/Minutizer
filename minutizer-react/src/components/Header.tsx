@@ -2,7 +2,9 @@ import React from "react";
 import {
   createStyles,
   makeStyles,
-  Theme
+  Theme,
+  createMuiTheme,
+  ThemeProvider,
 } from "@material-ui/core/styles";
 import AppBar from "@material-ui/core/AppBar";
 import Toolbar from "@material-ui/core/Toolbar";
@@ -15,17 +17,17 @@ import { auth } from "../firebase/firebase.utils";
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
     root: {
-      flexGrow: 1
+      flexGrow: 1,
     },
     title: {
-      flexGrow: 1
+      flexGrow: 1,
     },
     logOutButton: {
-      color: theme.palette.getContrastText(red[100]),
-      backgroundColor: red[100],
+      color: theme.palette.getContrastText(red[700]),
+      backgroundColor: red[700],
       fontWeight: "bold",
-      fontSize: "1.175rem"
-    }
+      fontSize: "1.175rem",
+    },
   })
 );
 
@@ -40,7 +42,7 @@ const Header = () => {
             Minutizer
           </Typography>
           <Button
-            variant="outlined"
+            variant="text"
             startIcon={<ExitToAppRoundedIcon style={{ fontSize: 25 }} />}
             className={classes.logOutButton}
             onClick={() => auth.signOut()}

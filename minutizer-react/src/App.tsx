@@ -31,7 +31,7 @@ class App extends React.Component<{ setCurrentUser; currentUser }, RootState> {
     return (
       <div>
         <Switch>
-          <Redirect exact from="/" to="/main" />
+          <Redirect exact from="/" to="/main/uploadAudio" />
           <Route
             path="/main"
             render={() =>
@@ -49,7 +49,7 @@ class App extends React.Component<{ setCurrentUser; currentUser }, RootState> {
               !currentUser ? (
                 <SignUp {...this.props} />
               ) : (
-                <Redirect to="/main" />
+                <Redirect to="/main/uploadAudio" />
               )
             }
           ></Route>
@@ -60,7 +60,7 @@ class App extends React.Component<{ setCurrentUser; currentUser }, RootState> {
               !currentUser ? (
                 <SignIn {...this.props} />
               ) : (
-                <Redirect to="/main" />
+                <Redirect to="/main/uploadAudio" />
               )
             }
           ></Route>
