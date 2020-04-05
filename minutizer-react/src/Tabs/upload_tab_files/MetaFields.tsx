@@ -77,6 +77,10 @@ class MetaFields extends React.Component<{ currentUser }, inputProps> {
     this.setState({ meetingName: event.target.value });
   }
 
+  handleAttendeesChange = values => {
+    this.setState({ attendees: values });
+  }
+
   getUserIdToken = async () => {
     if (this.props.currentUser) {
       try {
@@ -153,9 +157,8 @@ class MetaFields extends React.Component<{ currentUser }, inputProps> {
       endTime: this.state.endTime + ":00",
       meetingDate: this.state.meetingDate
     };
-    // console.log(this.state.attendees.length);
     if (this.state.attendees.length > 0) {
-      metadata["attendees"] = this.convertToStringArray(this.state.attendees);
+      metadata["attendees"] = this.state.attendees;
     }
     if (!this.state.meetingName) {
       // @ts-ignore
@@ -164,7 +167,6 @@ class MetaFields extends React.Component<{ currentUser }, inputProps> {
       metadata["meetingName"] = this.fileInput.current.files[0].name;
     }
 
-    console.log(metadata);
     this.toastId = toast("Uploading in progress, please wait...", {
       position: "top-center",
       autoClose: false,
@@ -395,6 +397,8 @@ class MetaFields extends React.Component<{ currentUser }, inputProps> {
           loadOptions={this.loadAttendees}
           getOptionLabel={option => option.email}
           getOptionValue={option => option.email}
+          value={this.state.attendees}
+          onChange={this.handleAttendeesChange}
           >
         </AsyncSelect>
 
