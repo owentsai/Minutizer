@@ -19,6 +19,7 @@ const useStyles = makeStyles((theme: Theme) =>
     },
     userEmail: {
       flexGrow: 1,
+      marginRight: theme.spacing(2),
     },
     logOutButton: {
       color: theme.palette.getContrastText(red[700]),
@@ -38,7 +39,7 @@ const Header = (props) => {
           <Typography variant="h3" className={classes.title}>
             Minutizer
           </Typography>
-          <Typography variant="h6" className={classes.userEmail}>
+          <Typography variant="h6" align="right" className={classes.userEmail}>
             {props.currentUser.email}
           </Typography>
           <Button

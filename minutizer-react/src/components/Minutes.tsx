@@ -335,11 +335,20 @@ const EnhancedTableToolbar = (props: EnhancedTableToolbarProps) => {
               Meeting Minutes
             </Typography>
           )}
-          <div onClick={() => requestButtonHandler()}>
+          {/* <div onClick={() => requestButtonHandler()}>
             <IconButton aria-label="disabled" disabled={numSelected <= 0}>
               <MailOutlineIcon style={{ fontSize: 35 }} />
             </IconButton>
-          </div>
+          </div> */}
+          <Button
+            variant="contained"
+            onClick={() => requestButtonHandler()}
+            disabled={numSelected <= 0}
+            startIcon={<MailOutlineIcon style={{ fontSize: 30 }} />}
+            color="primary"
+          >
+            Send
+          </Button>
           <Dialog
             open={open}
             onClose={handleClose}
