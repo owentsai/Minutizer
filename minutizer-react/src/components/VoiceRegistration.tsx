@@ -13,51 +13,48 @@ interface VoiceRegisterTabStates {
   countdownTimer: number,
 }
 
-class VoiceRegisterTab extends Component<
-  { currentUser },
-  VoiceRegisterTabStates
-> {
-  constructor(props) {
-    super(props);
-    this.state = {
-        start: false,
-        record: false,
-        countdownTimer: 3,
-        timer: 0
-    };
-    this.registerVoice = this.registerVoice.bind(this);
-  }
+class VoiceRegisterTab extends Component<{ currentUser }, VoiceRegisterTabStates> {
+    constructor(props) {
+      super(props);
+      this.state = {
+          start: false,
+          record: false,
+          countdownTimer: 3,
+          timer: 0
+      };
+      this.registerVoice = this.registerVoice.bind(this);
+    }
 
-  componentDidMount() {
-    setInterval(() => {
-        let currTime: number = this.state.timer;
-        let currCountdown: number = this.state.countdownTimer;
-    
-        if (this.state.start || this.state.record) {
-            if (this.state.start) {
-                if (this.state.countdownTimer == 0) {
-                    this.startRecording();
-                } else {
-                    this.setState({
-                        countdownTimer: currCountdown-1
-                    });
-                }
-            } else if (this.state.record) {
-                if (this.state.timer >= 30) {
-                    this.stopRecording();
-                } else {
-                    this.setState({
-                        timer: currTime+1
-                    });
-                } 
-            }
-        } else {
-            this.setState({
-                timer: 0,
-                countdownTimer: 3
-            });
-        }   
-    }, 1000);
+    componentDidMount() {
+      setInterval(() => {
+          let currTime: number = this.state.timer;
+          let currCountdown: number = this.state.countdownTimer;
+      
+          if (this.state.start || this.state.record) {
+              if (this.state.start) {
+                  if (this.state.countdownTimer == 0) {
+                      this.startRecording();
+                  } else {
+                      this.setState({
+                          countdownTimer: currCountdown-1
+                      });
+                  }
+              } else if (this.state.record) {
+                  if (this.state.timer >= 30) {
+                      this.stopRecording();
+                  } else {
+                      this.setState({
+                          timer: currTime+1
+                      });
+                  } 
+              }
+          } else {
+              this.setState({
+                  timer: 0,
+                  countdownTimer: 3
+              });
+          }   
+      }, 1000);
     }
 
     startButtonHandler = () => {
@@ -74,57 +71,70 @@ class VoiceRegisterTab extends Component<
             });
     } 
 
-
     stopRecording = () => {
         this.setState({
             record: false
         });
     }
 
-  async registerVoice(recordedBlob) {
-    const metadata = {
-      contentType: recordedBlob.blob.type
-    };
-
-    console.log("the metadata is " + metadata);
-
-    const postURL =
-      "https://us-central1-hacksbc-268409.cloudfunctions.net/enrol_voice_begin";
-
-    const getUserIdToken = async () => {
-      if (this.props.currentUser) {
-        try {
-          const token = await this.props.currentUser.getIdToken(false);
-          return token;
-        } catch (e) {
-          console.log(e);
+    async registerVoice(recordedBlob) {
+      const metadata = {
+        contentType: recordedBlob.blob.type
+      };
+      const getUserIdToken = async () => {
+        if (this.props.currentUser) {
+          try {
+            const token = await this.props.currentUser.getIdToken(false);
+            return token;
+          } catch (e) {
+            console.log(e);
+          }
         }
-      }
-    };
+      };
+      const authorizationHeaderValue: string = "Bearer " + (await getUserIdToken());
+      return this.getSignedURL(metadata, authorizationHeaderValue).then((signedURL: any) => {
+        this.sendAudioFile(signedURL, recordedBlob).then((result: any) => {
+          return;
+        })
+      })
+      .catch(error => {
+        console.log(`In catch: ${error}`);
+        return;
+      });
+    }
 
-    const authorizationHeaderValue: string =
-      "Bearer " + (await getUserIdToken());
-
-    const headers: Headers = new Headers();
-    headers.append("Authorization", authorizationHeaderValue);
-    headers.append("Accept", "application/json");
-    headers.append("Content-Type", "application/json");
-
-    // post
-    fetch(postURL, {
-      method: "POST",
-      headers: headers,
-      body: JSON.stringify(metadata)
-    })
-      .then(res => console.log("success: " + res))
-      .catch(err => console.log("email failed: " + err));
-  }
+    //HTTP request using XMLHTTP
+    getSignedURL(metadata: any, authHeaderValue: string) {
+      return new Promise(function(fulfill, reject) {
+        const URL =
+          "https://us-central1-hacksbc-268409.cloudfunctions.net/enrol_voice_begin";
+        const request = new XMLHttpRequest();
+        request.open("POST", URL, true);
+        request.setRequestHeader("Content-Type", "application/json");
+        request.setRequestHeader("Authorization", authHeaderValue);
+        request.onreadystatechange = function() {
+          if (
+            request.readyState === XMLHttpRequest.DONE &&
+            request.status === 200
+          ) {
+            console.log(request.responseText);
+          }
+        };
+        request.onload = function() {
+          fulfill(request.response);
+        };
+        request.onerror = function() {
+          reject("The request failed");
+        };
+        request.send(JSON.stringify(metadata));
+      });
+    }
 
   sendAudioFile(signedURL: any, recordedBlob: any) {
     return new Promise(function(fulfill, reject) {
       const request = new XMLHttpRequest();
       request.open("PUT", signedURL, true);
-      request.setRequestHeader("Content-Type", "audio/flac");
+      request.setRequestHeader("Content-Type", recordedBlob.blob.type);
       request.onreadystatechange = function() {
         if (
           request.readyState === XMLHttpRequest.DONE &&
@@ -139,35 +149,7 @@ class VoiceRegisterTab extends Component<
       request.onerror = function() {
         reject("The request failed");
       };
-
       request.send(recordedBlob);
-    });
-  }
-
-  //HTTP request using XMLHTTP
-  getSignedURL(metadata: any) {
-    return new Promise(function(fulfill, reject) {
-      const URL =
-        "https://us-central1-hacksbc-268409.cloudfunctions.net/enrol_voice_begin";
-      const request = new XMLHttpRequest();
-      request.open("POST", URL, true);
-      request.setRequestHeader("Content-Type", "application/json");
-      request.onreadystatechange = function() {
-        if (
-          request.readyState === XMLHttpRequest.DONE &&
-          request.status === 200
-        ) {
-          console.log(request.responseText);
-        }
-      };
-      request.onload = function() {
-        fulfill(request.response);
-      };
-      request.onerror = function() {
-        reject("The request failed");
-      };
-
-      request.send(JSON.stringify(metadata));
     });
   }
 
@@ -183,8 +165,7 @@ class VoiceRegisterTab extends Component<
     }
 
     return(
-        <div style={{margin: '50px 150px', borderRadius: "25px"}} 
-        className="p-3 shadow-lg">
+        <div className="p-3 shadow-lg card-m">
             <div className="d-flex flex-column align-items-center">
                 <h3>Your Voice Enrolment Status: [Insert Status]</h3>
                 <ReactMic
@@ -227,7 +208,7 @@ class VoiceRegisterTab extends Component<
             </div>
         </div>
     );
-}
+  }
 }
 const mapStateToProps = ({ user }) => ({
   currentUser: user.currentUser
