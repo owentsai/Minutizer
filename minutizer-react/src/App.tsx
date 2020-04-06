@@ -1,12 +1,13 @@
 import React from "react";
 import { connect } from "react-redux";
 import { Route, Switch, Redirect } from "react-router-dom";
-import "./Tabs/upload_tab_files/MetaFields.css";
-import SignUp from "./SignUp/sign-up.component";
-import MainPage from "./MainPage";
-import SignIn from "./SignIn/sign-in.component";
+import { MuiPickersUtilsProvider } from '@material-ui/pickers';
+import MomentUtils from '@date-io/moment';
 import { auth } from "./firebase/firebase.utils";
 import { setCurrentUser } from "./redux/user/user.actions";
+import SignUp from "./components/SignUp/SignUp";
+import SignIn from "./components/SignIn/SignIn";
+import MainPage from "./components/MainPage";
 
 interface RootState {
   currentUser: any;
@@ -31,6 +32,7 @@ class App extends React.Component<{ setCurrentUser; currentUser }, RootState> {
     const { currentUser } = this.props;
     return (
       <div>
+        <MuiPickersUtilsProvider utils={MomentUtils}>
         <Switch>
           <Redirect exact from="/" to="/main" />
           <Route
@@ -66,6 +68,7 @@ class App extends React.Component<{ setCurrentUser; currentUser }, RootState> {
             }
           ></Route>
         </Switch>
+        </MuiPickersUtilsProvider>
       </div>
     );
   }
