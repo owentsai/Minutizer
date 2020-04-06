@@ -1,17 +1,12 @@
 import React from "react";
-import {
-  createStyles,
-  makeStyles,
-  Theme,
-  createMuiTheme,
-  ThemeProvider,
-} from "@material-ui/core/styles";
+import { createStyles, makeStyles, Theme } from "@material-ui/core/styles";
 import AppBar from "@material-ui/core/AppBar";
 import Toolbar from "@material-ui/core/Toolbar";
 import Typography from "@material-ui/core/Typography";
 import Button from "@material-ui/core/Button";
 import ExitToAppRoundedIcon from "@material-ui/icons/ExitToAppRounded";
 import { red } from "@material-ui/core/colors";
+import { connect } from "react-redux";
 import { auth } from "../firebase/firebase.utils";
 
 const useStyles = makeStyles((theme: Theme) =>
@@ -22,16 +17,18 @@ const useStyles = makeStyles((theme: Theme) =>
     title: {
       flexGrow: 1,
     },
+    userEmail: {
+      flexGrow: 1,
+    },
     logOutButton: {
       color: theme.palette.getContrastText(red[700]),
-      backgroundColor: red[700],
       fontWeight: "bold",
       fontSize: "1.175rem",
     },
   })
 );
 
-const Header = () => {
+const Header = (props) => {
   const classes = useStyles();
 
   return (
@@ -40,6 +37,9 @@ const Header = () => {
         <Toolbar>
           <Typography variant="h3" className={classes.title}>
             Minutizer
+          </Typography>
+          <Typography variant="h6" className={classes.userEmail}>
+            {props.currentUser.email}
           </Typography>
           <Button
             variant="text"
@@ -55,4 +55,9 @@ const Header = () => {
     </div>
   );
 };
-export default Header;
+
+const mapStateToProps = ({ user }) => ({
+  currentUser: user.currentUser,
+});
+
+export default connect(mapStateToProps)(Header);

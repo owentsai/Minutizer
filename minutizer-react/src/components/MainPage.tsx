@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React, { Component, useState } from "react";
 import Tabs from "@material-ui/core/Tabs";
 import Tab from "@material-ui/core/Tab";
 import { Route, Switch, Link } from "react-router-dom";
@@ -45,7 +45,7 @@ const useStyles = makeStyles({
 
 function NavigationTabs() {
   const classes = useStyles();
-  const [value, setValue] = React.useState(0);
+  const [value, setValue] = useState(0);
 
   const handleChange = (event: React.ChangeEvent<{}>, newValue: number) => {
     setValue(newValue);
@@ -70,10 +70,10 @@ function NavigationTabs() {
         ></Tab>
         <Tab
           className={classes.selected}
-          icon={<MicRoundedIcon />}
-          label="Register Voice"
+          icon={<HourglassEmptyRoundedIcon />}
+          label="Recordings Being Processed"
           component={Link}
-          to="/main/registerVoice"
+          to="/main/inProgressProcessings"
         ></Tab>
         <Tab
           className={classes.selected}
@@ -84,10 +84,10 @@ function NavigationTabs() {
         ></Tab>
         <Tab
           className={classes.selected}
-          icon={<HourglassEmptyRoundedIcon />}
-          label="In Progress Meetings"
+          icon={<MicRoundedIcon />}
+          label="Register Voice"
           component={Link}
-          to="/main/inProgressRequests"
+          to="/main/registerVoice"
         ></Tab>
       </Tabs>
       <Switch>
@@ -97,12 +97,14 @@ function NavigationTabs() {
         <Route path="/main/registerVoice">
           <VoiceRegisterTab />
         </Route>
-        <Route path="/main/requestMinutes">
-          <MyTable from={completedTranscriptionURL} completed={true} />
-        </Route>
-        <Route path="/main/inProgressRequests">
-          <MyTable from={inProgressTranscriptionURL} completed={false} />
-        </Route>
+        <Route
+          path="/main/requestMinutes"
+          component={(props) => <MyTable {...props} completed={true} />}
+        ></Route>
+        <Route
+          path="/main/inProgressProcessings"
+          component={(props) => <MyTable {...props} completed={false} />}
+        ></Route>
       </Switch>
     </div>
   );
