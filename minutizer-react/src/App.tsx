@@ -1,6 +1,8 @@
 import React from "react";
 import { connect } from "react-redux";
 import { Route, Switch, Redirect } from "react-router-dom";
+import { MuiPickersUtilsProvider } from "@material-ui/pickers";
+import MomentUtils from "@date-io/moment";
 import { auth } from "./firebase/firebase.utils";
 import { setCurrentUser } from "./redux/user/user.actions";
 import SignUp from "./components/SignUp/SignUp";
@@ -30,41 +32,43 @@ class App extends React.Component<{ setCurrentUser; currentUser }, RootState> {
     const { currentUser } = this.props;
     return (
       <div>
-        <Switch>
-          <Redirect exact from="/" to="/main/uploadAudio" />
-          <Route
-            path="/main"
-            render={() =>
-              currentUser ? (
-                <MainPage {...this.props} />
-              ) : (
-                <Redirect to="/signin" />
-              )
-            }
-          ></Route>
-          <Route
-            exact
-            path="/signup"
-            render={() =>
-              !currentUser ? (
-                <SignUp {...this.props} />
-              ) : (
-                <Redirect to="/main/uploadAudio" />
-              )
-            }
-          ></Route>
-          <Route
-            exact
-            path="/signin"
-            render={() =>
-              !currentUser ? (
-                <SignIn {...this.props} />
-              ) : (
-                <Redirect to="/main/uploadAudio" />
-              )
-            }
-          ></Route>
-        </Switch>
+        <MuiPickersUtilsProvider utils={MomentUtils}>
+          <Switch>
+            <Redirect exact from="/" to="/main/uploadAudio" />
+            <Route
+              path="/main"
+              render={() =>
+                currentUser ? (
+                  <MainPage {...this.props} />
+                ) : (
+                  <Redirect to="/signin" />
+                )
+              }
+            ></Route>
+            <Route
+              exact
+              path="/signup"
+              render={() =>
+                !currentUser ? (
+                  <SignUp {...this.props} />
+                ) : (
+                  <Redirect to="/main/uploadAudio" />
+                )
+              }
+            ></Route>
+            <Route
+              exact
+              path="/signin"
+              render={() =>
+                !currentUser ? (
+                  <SignIn {...this.props} />
+                ) : (
+                  <Redirect to="/main/uploadAudio" />
+                )
+              }
+            ></Route>
+          </Switch>
+        </MuiPickersUtilsProvider>
       </div>
     );
   }

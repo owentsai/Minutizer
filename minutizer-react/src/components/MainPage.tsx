@@ -18,11 +18,6 @@ import MicRoundedIcon from "@material-ui/icons/MicRounded";
 import CheckCircleRoundedIcon from "@material-ui/icons/CheckCircleRounded";
 import HourglassEmptyRoundedIcon from "@material-ui/icons/HourglassEmptyRounded";
 
-const completedTranscriptionURL =
-  "https://us-central1-hacksbc-268409.cloudfunctions.net/transcription-status-check?completedTranscriptions=true";
-const inProgressTranscriptionURL =
-  "https://us-central1-hacksbc-268409.cloudfunctions.net/transcription-status-check?inProgressTranscriptions=true";
-
 const theme = createMuiTheme({
   palette: {
     primary: {
