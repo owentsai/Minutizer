@@ -1,0 +1,5 @@
+sqlalchemy
+google-cloud-storage
+Flask
+PyMySQL
+firebase-admin
