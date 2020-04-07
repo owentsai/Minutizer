@@ -1,6 +1,7 @@
 import React, { Component, useState } from "react";
 import Tabs from "@material-ui/core/Tabs";
 import Tab from "@material-ui/core/Tab";
+import Paper from "@material-ui/core/Paper";
 import { Route, Switch, Link } from "react-router-dom";
 import "./../App.css";
 import VoiceRegisterTab from "./VoiceRegistration";
@@ -48,43 +49,45 @@ function NavigationTabs() {
 
   return (
     <div>
-      <Tabs
-        value={value}
-        onChange={handleChange}
-        variant="fullWidth"
-        indicatorColor="secondary"
-        textColor="secondary"
-        centered
-      >
-        <Tab
-          className={classes.selected}
-          icon={<GraphicEqRoundedIcon />}
-          label="Upload Meeting Recording"
-          component={Link}
-          to="/main/uploadAudio"
-        ></Tab>
-        <Tab
-          className={classes.selected}
-          icon={<HourglassEmptyRoundedIcon />}
-          label="Recordings Being Processed"
-          component={Link}
-          to="/main/inProgressProcessings"
-        ></Tab>
-        <Tab
-          className={classes.selected}
-          icon={<CheckCircleRoundedIcon />}
-          label="Request Meeting Minutes"
-          component={Link}
-          to="/main/requestMinutes"
-        ></Tab>
-        <Tab
-          className={classes.selected}
-          icon={<MicRoundedIcon />}
-          label="Register Voice"
-          component={Link}
-          to="/main/registerVoice"
-        ></Tab>
-      </Tabs>
+      <Paper elevation={2}>
+        <Tabs
+          value={value}
+          onChange={handleChange}
+          variant="fullWidth"
+          indicatorColor="secondary"
+          textColor="secondary"
+          centered
+        >
+          <Tab
+            className={classes.selected}
+            icon={<GraphicEqRoundedIcon />}
+            label="Upload Meeting Recording"
+            component={Link}
+            to="/main/uploadAudio"
+          ></Tab>
+          <Tab
+            className={classes.selected}
+            icon={<HourglassEmptyRoundedIcon />}
+            label="Recordings Being Processed"
+            component={Link}
+            to="/main/inProgressProcessings"
+          ></Tab>
+          <Tab
+            className={classes.selected}
+            icon={<CheckCircleRoundedIcon />}
+            label="Request Meeting Minutes"
+            component={Link}
+            to="/main/requestMinutes"
+          ></Tab>
+          <Tab
+            className={classes.selected}
+            icon={<MicRoundedIcon />}
+            label="Register Voice"
+            component={Link}
+            to="/main/registerVoice"
+          ></Tab>
+        </Tabs>
+      </Paper>
       <Switch>
         <Route path="/main/uploadAudio">
           <UploadAudio />

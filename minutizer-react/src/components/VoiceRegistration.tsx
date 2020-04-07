@@ -7,10 +7,11 @@ import Button from "@material-ui/core/Button";
 import { connect } from "react-redux";
 
 interface VoiceRegisterTabStates {
-  record: boolean;
+  isRecording: boolean;
   timer: number;
-  start: boolean;
+  hasStarted: boolean;
   countdownTimer: number;
+  isUserEnrolled: boolean;
 }
 
 class VoiceRegisterTab extends Component<
@@ -20,12 +21,14 @@ class VoiceRegisterTab extends Component<
   constructor(props) {
     super(props);
     this.state = {
-      start: false,
-      record: false,
+      hasStarted: false,
+      isRecording: false,
       countdownTimer: 3,
       timer: 0,
+      isUserEnrolled: false,
     };
     this.registerVoice = this.registerVoice.bind(this);
+    this.getUserIdToken = this.getUserIdToken.bind(this);
   }
 
   componentDidMount() {
@@ -33,16 +36,16 @@ class VoiceRegisterTab extends Component<
       let currTime: number = this.state.timer;
       let currCountdown: number = this.state.countdownTimer;
 
-      if (this.state.start || this.state.record) {
-        if (this.state.start) {
-          if (this.state.countdownTimer == 0) {
+      if (this.state.hasStarted || this.state.isRecording) {
+        if (this.state.hasStarted) {
+          if (this.state.countdownTimer === 0) {
             this.startRecording();
           } else {
             this.setState({
               countdownTimer: currCountdown - 1,
             });
           }
-        } else if (this.state.record) {
+        } else if (this.state.isRecording) {
           if (this.state.timer >= 30) {
             this.stopRecording();
           } else {
@@ -58,54 +61,79 @@ class VoiceRegisterTab extends Component<
         });
       }
     }, 1000);
+    this.getEnrollmentStatus();
+    console.log(this.state.isUserEnrolled);
+  }
+
+  async getUserIdToken() {
+    if (this.props.currentUser) {
+      try {
+        return await this.props.currentUser.getIdToken(false);
+      } catch (e) {
+        console.log(e);
+      }
+    }
+  }
+
+  async getEnrollmentStatus() {
+    const voiceEnrollmentStatusURL: string =
+      "https://us-central1-hacksbc-268409.cloudfunctions.net/enrolment_status_check";
+    const authorizationHeaderValue: string =
+      "Bearer " + (await this.getUserIdToken());
+    const header: Headers = new Headers();
+    header.append("Authorization", authorizationHeaderValue);
+    const result = await fetch(voiceEnrollmentStatusURL, {
+      method: "GET",
+      headers: header,
+    });
+    const statusJSON = await result.json();
+    console.log(statusJSON);
+    // const enrollmentStatus: boolean = statusJSON.data["enrolled"];
+    // this.setState({ isUserEnrolled: enrollmentStatus });
   }
 
   startButtonHandler = () => {
     this.setState({
-      start: true,
+      hasStarted: true,
     });
   };
 
   startRecording = () => {
     this.setState({
       countdownTimer: 3,
-      record: true,
-      start: false,
+      isRecording: true,
+      hasStarted: false,
     });
   };
 
   stopRecording = () => {
     this.setState({
-      record: false,
+      isRecording: false,
     });
   };
 
-  async registerVoice(recordedBlob) {
+  async registerVoice(recordedBlob: any) {
     const metadata = {
       contentType: recordedBlob.blob.type,
     };
-    const getUserIdToken = async () => {
-      if (this.props.currentUser) {
-        try {
-          const token = await this.props.currentUser.getIdToken(false);
-          return token;
-        } catch (e) {
-          console.log(e);
-        }
-      }
-    };
-    const authorizationHeaderValue: string =
-      "Bearer " + (await getUserIdToken());
-    return this.getSignedURL(metadata, authorizationHeaderValue)
-      .then((signedURL: any) => {
-        this.sendAudioFile(signedURL, recordedBlob).then((result: any) => {
-          return;
-        });
-      })
-      .catch((error) => {
-        console.log(`In catch: ${error}`);
-        return;
-      });
+    console.log(recordedBlob);
+    // Convert Blob to File
+    const recordedAudioFile = new File([recordedBlob.blob], "", {
+      lastModified: recordedBlob.stopTime,
+      type: recordedBlob.blob.type,
+    });
+    console.log(recordedAudioFile);
+    try {
+      const authorizationHeaderValue: string =
+        "Bearer " + (await this.getUserIdToken());
+      const signedURL = await this.getSignedURL(
+        metadata,
+        authorizationHeaderValue
+      );
+      await this.sendAudioFile(signedURL, recordedAudioFile);
+    } catch (err) {
+      console.error("Catch error when uploading voice sample: /n" + err);
+    }
   }
 
   //HTTP request using XMLHTTP
@@ -135,11 +163,14 @@ class VoiceRegisterTab extends Component<
     });
   }
 
-  sendAudioFile(signedURL: any, recordedBlob: any) {
+  sendAudioFile(signedURL: any, recordedFile: any) {
     return new Promise(function (fulfill, reject) {
+      let formData = new FormData();
+      formData.append("file", recordedFile);
       const request = new XMLHttpRequest();
       request.open("PUT", signedURL, true);
-      request.setRequestHeader("Content-Type", recordedBlob.blob.type);
+      request.setRequestHeader("Content-Type", recordedFile.type);
+
       request.onreadystatechange = function () {
         if (
           request.readyState === XMLHttpRequest.DONE &&
@@ -154,7 +185,7 @@ class VoiceRegisterTab extends Component<
       request.onerror = function () {
         reject("The request failed");
       };
-      request.send(recordedBlob);
+      request.send(formData);
     });
   }
 
@@ -162,7 +193,7 @@ class VoiceRegisterTab extends Component<
     var currButton;
     var enrolButtonColor =
       this.state.timer < 25 ? "bg-primary text-white" : "bg-warning text-white";
-    if (!this.state.start && !this.state.record) {
+    if (!this.state.hasStarted && !this.state.isRecording) {
       currButton = (
         <Button
           style={{ width: "200px", height: "35px" }}
@@ -174,7 +205,7 @@ class VoiceRegisterTab extends Component<
           START
         </Button>
       );
-    } else if (this.state.start) {
+    } else if (this.state.hasStarted) {
       currButton = (
         <Button
           style={{ width: "200px", height: "35px" }}
@@ -204,12 +235,12 @@ class VoiceRegisterTab extends Component<
         <div className="d-flex flex-column align-items-center">
           <h3>Your Voice Enrolment Status: [Insert Status]</h3>
           <ReactMic
-            record={this.state.record}
+            record={this.state.isRecording}
             onStop={this.registerVoice}
             className="d-flex align-self-stretch rounded-lg m-3"
             strokeColor="#3944BC"
             backgroundColor="#262626"
-            mimeType="audio/flac"
+            mimeType="audio/webm"
           />
           <div className="pb-1">
             {/* <div className="p-1" style={{border: "2px solid black", borderRadius: "50%" }}> */}

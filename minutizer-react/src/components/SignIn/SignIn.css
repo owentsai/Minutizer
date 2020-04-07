@@ -3,7 +3,7 @@
 }
 
 .image {
-  background-image: url("./login_image.png");
+  background-image: url("../assets/coverpage.png");
   background-repeat: no-repeat;
   background-color: #fafafa;
   background-size: cover;
