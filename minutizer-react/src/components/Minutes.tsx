@@ -460,7 +460,7 @@ function MyTable(props: { completed: boolean; currentUser: any }) {
     []
   );
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(20);
   const [meetings, setMeetings] = useState<Data[]>([]);
   const [count, setCount] = useState(0);
   const [loading, setLoading] = useState<Boolean>(true);
@@ -568,7 +568,7 @@ function MyTable(props: { completed: boolean; currentUser: any }) {
   };
 
   const handleChangePage = (event: unknown, newPage: number) => {
-    if (meetings.length / 10 < newPage + 1) {
+    if (meetings.length / 20 < newPage + 1) {
       // if have not loaded the meetings on this page
       setLoading(true);
     }
@@ -681,7 +681,7 @@ function MyTable(props: { completed: boolean; currentUser: any }) {
             )}
           </TableContainer>
           <TablePagination
-            rowsPerPageOptions={[10]}
+            rowsPerPageOptions={[20]}
             component="div"
             count={count}
             rowsPerPage={rowsPerPage}
