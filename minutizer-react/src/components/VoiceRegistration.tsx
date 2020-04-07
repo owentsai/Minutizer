@@ -4,8 +4,9 @@ import MicIcon from "@material-ui/icons/Mic";
 import StopIcon from "@material-ui/icons/Stop";
 import TimerIcon from "@material-ui/icons/Timer";
 import Button from "@material-ui/core/Button";
+import Alert from "@material-ui/lab/Alert";
 import { connect } from "react-redux";
-import MicRecorder from 'mic-recorder-to-mp3';
+import MicRecorder from "mic-recorder-to-mp3";
 
 interface VoiceRegisterTabStates {
   recorder: any;
@@ -16,7 +17,10 @@ interface VoiceRegisterTabStates {
   isUserEnrolled: boolean;
 }
 
-class VoiceRegisterTab extends Component<{ currentUser },VoiceRegisterTabStates> {
+class VoiceRegisterTab extends Component<
+  { currentUser },
+  VoiceRegisterTabStates
+> {
   constructor(props) {
     super(props);
     this.state = {
@@ -62,7 +66,6 @@ class VoiceRegisterTab extends Component<{ currentUser },VoiceRegisterTabStates>
       }
     }, 1000);
     this.getEnrollmentStatus();
-    console.log(this.state.isUserEnrolled);
   }
 
   async getUserIdToken() {
@@ -76,6 +79,7 @@ class VoiceRegisterTab extends Component<{ currentUser },VoiceRegisterTabStates>
   }
 
   async getEnrollmentStatus() {
+    console.log("before: " + this.state.isUserEnrolled);
     const voiceEnrollmentStatusURL: string =
       "https://us-central1-hacksbc-268409.cloudfunctions.net/enrolment_status_check";
     const authorizationHeaderValue: string =
@@ -88,8 +92,9 @@ class VoiceRegisterTab extends Component<{ currentUser },VoiceRegisterTabStates>
     });
     const statusJSON = await result.json();
     console.log(statusJSON);
-    // const enrollmentStatus: boolean = statusJSON.data["enrolled"];
-    // this.setState({ isUserEnrolled: enrollmentStatus });
+    const enrollmentStatus: boolean = statusJSON.enrolled;
+    this.setState({ isUserEnrolled: enrollmentStatus });
+    console.log("after: " + this.state.isUserEnrolled);
   }
 
   startButtonHandler = () => {
@@ -99,15 +104,18 @@ class VoiceRegisterTab extends Component<{ currentUser },VoiceRegisterTabStates>
   };
 
   startRecording = () => {
-    this.state.recorder.start().then(() => {
-      this.setState({
-        countdownTimer: 3,
-        isRecording: true,
-        hasStarted: false,
+    this.state.recorder
+      .start()
+      .then(() => {
+        this.setState({
+          countdownTimer: 3,
+          isRecording: true,
+          hasStarted: false,
+        });
+      })
+      .catch((e) => {
+        console.log(e);
       });
-    }).catch(e => {
-     console.log(e);
-    });
   };
 
   stopRecording = () => {
@@ -117,16 +125,24 @@ class VoiceRegisterTab extends Component<{ currentUser },VoiceRegisterTabStates>
   };
 
   async registerVoice(recordedBlob: any) {
-    const recordedFile = await this.state.recorder.stop().getMp3().then(([buffer, blob]) => {
-      return new File(buffer, 'Recorded_audio.mp3', { type: blob.type, lastModified: Date.now() });
-    });
+    const recordedFile = await this.state.recorder
+      .stop()
+      .getMp3()
+      .then(([buffer, blob]) => {
+        return new File(buffer, "recorded_audio.mp3", {
+          type: blob.type,
+          lastModified: Date.now(),
+        });
+      });
     try {
-      const authorizationHeaderValue: string = "Bearer " + (await this.getUserIdToken());
+      const authorizationHeaderValue: string =
+        "Bearer " + (await this.getUserIdToken());
       const signedURL = await this.getSignedURL(
         { contentType: recordedFile.type },
         authorizationHeaderValue
       );
       await this.sendAudioFile(signedURL, recordedFile);
+      this.setState({ isUserEnrolled: true });
     } catch (err) {
       console.error("Catch error when uploading voice sample: /n" + err);
     }
@@ -229,7 +245,20 @@ class VoiceRegisterTab extends Component<{ currentUser },VoiceRegisterTabStates>
     return (
       <div className="p-3 shadow-lg card-m">
         <div className="d-flex flex-column align-items-center">
-          <h3>Your Voice Enrolment Status: [Insert Status]</h3>
+          <div className="d-flex flex-row align-self-center justify-content-center">
+            <h4 className="mr-2 pt-2">Your Voice Enrolment Status: </h4>
+            <div>
+              {this.state.isUserEnrolled ? (
+                <Alert variant="outlined" severity="success">
+                  You have successfully enrolled your voice
+                </Alert>
+              ) : (
+                <Alert variant="outlined" severity="warning">
+                  You have not enrolled your voice
+                </Alert>
+              )}
+            </div>
+          </div>
           <ReactMic
             record={this.state.isRecording}
             onStop={this.registerVoice}
