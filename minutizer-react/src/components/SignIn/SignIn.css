@@ -3,7 +3,7 @@
 }
 
 .image {
-  background-image: url(https://storage.needpix.com/rsynced_images/meeting-1184892_1280.png);
+  background-image: url("../assets/coverpage.png");
   background-repeat: no-repeat;
   background-color: #fafafa;
   background-size: cover;
