@@ -1,0 +1,4 @@
+google-cloud-storage
+PyMySQL
+Flask
+sqlalchemy
