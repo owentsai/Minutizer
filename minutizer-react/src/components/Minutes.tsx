@@ -374,6 +374,7 @@ const EnhancedTableToolbar = (props: EnhancedTableToolbarProps) => {
                 className="d-flex justify-content-center"
                 icon={<CheckIcon fontSize="inherit" />}
                 severity="success"
+                variant="outlined"
               >
                 Success
               </Alert>
@@ -601,7 +602,7 @@ function MyTable(props: { completed: boolean; currentUser: any }) {
           />
           <TableContainer>
             {loading ? (
-              <CircularProgress className="d-flex justify-content-center" />
+              <CircularProgress />
             ) : (
               <Table
                 className={classes.table}
