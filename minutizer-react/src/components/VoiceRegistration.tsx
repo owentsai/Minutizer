@@ -5,8 +5,10 @@ import StopIcon from "@material-ui/icons/Stop";
 import TimerIcon from "@material-ui/icons/Timer";
 import Button from "@material-ui/core/Button";
 import { connect } from "react-redux";
+import MicRecorder from 'mic-recorder-to-mp3';
 
 interface VoiceRegisterTabStates {
+  recorder: any;
   isRecording: boolean;
   timer: number;
   hasStarted: boolean;
@@ -14,13 +16,11 @@ interface VoiceRegisterTabStates {
   isUserEnrolled: boolean;
 }
 
-class VoiceRegisterTab extends Component<
-  { currentUser },
-  VoiceRegisterTabStates
-> {
+class VoiceRegisterTab extends Component<{ currentUser },VoiceRegisterTabStates> {
   constructor(props) {
     super(props);
     this.state = {
+      recorder: new MicRecorder({ bitRate: 160 }),
       hasStarted: false,
       isRecording: false,
       countdownTimer: 3,
@@ -99,10 +99,14 @@ class VoiceRegisterTab extends Component<
   };
 
   startRecording = () => {
-    this.setState({
-      countdownTimer: 3,
-      isRecording: true,
-      hasStarted: false,
+    this.state.recorder.start().then(() => {
+      this.setState({
+        countdownTimer: 3,
+        isRecording: true,
+        hasStarted: false,
+      });
+    }).catch(e => {
+     console.log(e);
     });
   };
 
@@ -113,24 +117,16 @@ class VoiceRegisterTab extends Component<
   };
 
   async registerVoice(recordedBlob: any) {
-    const metadata = {
-      contentType: recordedBlob.blob.type,
-    };
-    console.log(recordedBlob);
-    // Convert Blob to File
-    const recordedAudioFile = new File([recordedBlob.blob], "", {
-      lastModified: recordedBlob.stopTime,
-      type: recordedBlob.blob.type,
+    const recordedFile = await this.state.recorder.stop().getMp3().then(([buffer, blob]) => {
+      return new File(buffer, 'Recorded_audio.mp3', { type: blob.type, lastModified: Date.now() });
     });
-    console.log(recordedAudioFile);
     try {
-      const authorizationHeaderValue: string =
-        "Bearer " + (await this.getUserIdToken());
+      const authorizationHeaderValue: string = "Bearer " + (await this.getUserIdToken());
       const signedURL = await this.getSignedURL(
-        metadata,
+        { contentType: recordedFile.type },
         authorizationHeaderValue
       );
-      await this.sendAudioFile(signedURL, recordedAudioFile);
+      await this.sendAudioFile(signedURL, recordedFile);
     } catch (err) {
       console.error("Catch error when uploading voice sample: /n" + err);
     }
