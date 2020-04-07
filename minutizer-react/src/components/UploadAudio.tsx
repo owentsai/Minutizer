@@ -23,20 +23,22 @@ interface inputProps {
   meetingDate: any;
   attendees: any;
   audioFile: any;
+  placeholder: any;
 }
+
 
 class UploadTab extends React.Component<{ currentUser }, inputProps> {
   constructor(props: any) {
     super(props);
-    let currMoment = momentFns.date();
     this.state = {
       organizer: props.currentUser.email,
-      startTime: currMoment,
-      endTime: currMoment,
+      startTime: null,
+      endTime: null,
       meetingName: "",
-      meetingDate: currMoment.format("L"),
+      meetingDate: null,
       attendees: [],
       audioFile: null,
+      placeholder: momentFns.date()
     };
   }
 
@@ -148,9 +150,9 @@ class UploadTab extends React.Component<{ currentUser }, inputProps> {
       contentType: this.state.audioFile.type,
       organizerUserName: this.state.organizer,
       meetingName: this.state.meetingName,
-      startTime: momentFns.date(this.state.startTime).format("HH:mm:ss"),
-      endTime: momentFns.date(this.state.endTime).format("HH:mm:ss"),
-      meetingDate: momentFns.date(this.state.meetingDate).format("YYYY-MM-DD"),
+      startTime: this.state.startTime && momentFns.date(this.state.startTime).format("HH:mm:ss"),
+      endTime: this.state.endTime && momentFns.date(this.state.endTime).format("HH:mm:ss"),
+      meetingDate: this.state.meetingDate && momentFns.date(this.state.meetingDate).format("YYYY-MM-DD"),
     };
     if (this.state.attendees && this.state.attendees.length > 0) {
       metadata["attendees"] = this.state.attendees;
@@ -298,6 +300,7 @@ class UploadTab extends React.Component<{ currentUser }, inputProps> {
               disableToolbar
               variant="inline"
               format="DD/MM/YYYY"
+              placeholder={this.state.placeholder.format("L")}
               value={this.state.meetingDate}
               onChange={this.handleChangeDate}
             />
@@ -308,6 +311,7 @@ class UploadTab extends React.Component<{ currentUser }, inputProps> {
               ampm={false}
               format="HH:mm"
               variant="inline"
+              placeholder={this.state.placeholder.format("LT")}
               value={this.state.startTime}
               onChange={this.handleChangeStartTime}
               keyboardIcon={<ScheduleIcon></ScheduleIcon>}
@@ -319,6 +323,7 @@ class UploadTab extends React.Component<{ currentUser }, inputProps> {
               ampm={false}
               format="HH:mm"
               variant="inline"
+              placeholder={this.state.placeholder.format("LT")}
               value={this.state.endTime}
               onChange={this.handleChangeEndTime}
               keyboardIcon={<ScheduleIcon></ScheduleIcon>}
@@ -351,13 +356,12 @@ class UploadTab extends React.Component<{ currentUser }, inputProps> {
   }
 
   private resetForm() {
-    let currMoment = momentFns.date();
     this.setState({
       organizer: "",
-      startTime: currMoment,
-      endTime: currMoment,
+      startTime: null,
+      endTime: null,
       meetingName: "",
-      meetingDate: currMoment.format("L"),
+      meetingDate: null,
       attendees: [],
       audioFile: null,
     });
