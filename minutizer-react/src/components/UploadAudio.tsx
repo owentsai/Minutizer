@@ -14,6 +14,9 @@ import ScheduleIcon from "@material-ui/icons/Schedule";
 toast.configure();
 
 const momentFns = new MomentUtils();
+const moment = require('moment');
+moment().format();
+let toastTime;
 
 interface inputProps {
   organizer: any;
@@ -40,6 +43,8 @@ class UploadTab extends React.Component<{ currentUser }, inputProps> {
       audioFile: null,
       placeholder: momentFns.date()
     };
+    this.setState({startTime: this.state.placeholder,
+                          endTime: this.state.placeholder})
   }
 
   handleChangeMeetingName = (event) => {
@@ -55,11 +60,59 @@ class UploadTab extends React.Component<{ currentUser }, inputProps> {
   };
 
   handleChangeStartTime = (time) => {
-    this.setState({ startTime: time });
+    if (!moment(time).isValid()){
+      this.setState({ startTime: time });
+      return;
+    }
+    let eTimeMin;
+    if (this.state.endTime == null){
+      eTimeMin = moment().hour()*60 + moment().minute();
+    }else{
+      eTimeMin = this.state.endTime.hour()*60 + this.state.endTime.minute();
+    }
+    let sTimeMin = time.hour()*60 + time.minute();
+    if(sTimeMin <= eTimeMin){
+      this.setState({ startTime: time });
+    }else {
+      //Duplicate toast messages being displayed, probably due to async natuer of onChange function calls
+      // if (!toast.isActive(toastTime)){
+      //   toastTime = toast.error(
+      //       <div>
+      //         Invalid time selected!
+      //         <br />
+      //         Start time must be before or equal to end time.
+      //       </div>,
+      //       {
+      //         position: "top-center",
+      //         autoClose: 5000,
+      //         hideProgressBar: false,
+      //         closeOnClick: true,
+      //         pauseOnHover: true,
+      //         draggable: true,
+      //       }
+      //   );
+      // }
+      alert("Invalid date selected, start time must be before end time.");
+    }
   };
 
   handleChangeEndTime = (time) => {
-    this.setState({ endTime: time });
+    if (!moment(time).isValid()){
+      this.setState({ endTime: time });
+      return;
+    }
+    let sTimeMin;
+    if (this.state.startTime == null){
+      sTimeMin = moment().hour()*60 + moment().minute();
+    }else{
+      sTimeMin = this.state.startTime.hour()*60 + this.state.startTime.minute();
+    }
+    let eTimeMin = time.hour()*60 + time.minute();
+    if(sTimeMin <= eTimeMin){
+      this.setState({ endTime: time });
+    }else {
+      alert("Invalid date selected, start time must be before end time.");
+    }
   };
 
   handleAttendeesChange = (values) => {
@@ -119,7 +172,25 @@ class UploadTab extends React.Component<{ currentUser }, inputProps> {
   };
 
   handleSubmitForm = (event) => {
-    let parts: string[] = this.state.audioFile.name.split(".");
+    let parts: string[]
+    try{
+       parts = this.state.audioFile.name.split(".");
+    }catch (e) {
+      return toast.error(
+          <div>
+            No file selected!
+          </div>,
+          {
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          }
+      );
+    }
+
     let extension: string = parts[parts.length - 1].toLowerCase();
     if (extension === "wav" || extension === "mp3") {
       return this.uploadToCloud();
