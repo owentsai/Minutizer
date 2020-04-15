@@ -92,7 +92,7 @@ class UploadTab extends React.Component<{ currentUser }, inputProps> {
       //       }
       //   );
       // }
-      alert("Invalid date selected, start time must be before end time.");
+      alert("Invalid time selected, start time must be before end time.");
     }
   };
 
@@ -111,7 +111,7 @@ class UploadTab extends React.Component<{ currentUser }, inputProps> {
     if(sTimeMin <= eTimeMin){
       this.setState({ endTime: time });
     }else {
-      alert("Invalid date selected, start time must be before end time.");
+      alert("Invalid time selected, start time must be before end time.");
     }
   };
 
