@@ -1,0 +1,5 @@
+google-cloud-storage
+Flask
+firebase-admin
+six
+google-auth
