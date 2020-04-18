@@ -1,17 +1,11 @@
 import firebase_admin
 from firebase_admin import auth
-from google.oauth2 import service_account
 from google.cloud import storage
 from flask import escape, Response
-import six
-from six.moves.urllib.parse import quote
 from datetime import datetime, timedelta
 import os
 import sys
 import logging
-import binascii
-import collections
-import hashlib
 
 default_app = firebase_admin.initialize_app()
 logger = logging.getLogger()
@@ -51,12 +45,18 @@ def get_signed_url_for_enrolment_http(request):
     if not request_json or not 'contentType' in request_json:
         return Response(status=500, response="Error: Missing required fields.", headers=headers)
     
-    signed_url_headers = { "content-type": request_json['contentType'] }
+    content_type = request_json['contentType']
+    
+    storage_client = storage.Client.from_service_account_json('service_account.json')
+
     bucket_name = os.environ.get("ENROLMENT_BUCKET_NAME")
     object_name = user_email + '/' + datetime.now().strftime('%Y%m%dT%H%M%SZ')
+    file = storage_client.bucket(bucket_name).blob(object_name)
     
-    url = generate_signed_url(bucket_name=bucket_name, object_name=object_name, method="PUT", headers=signed_url_headers)
+    expires_at_ms = datetime.now() + timedelta(seconds=300)
 
+    url = file.generate_signed_url(expires_at_ms, method="PUT", content_type=content_type, version='v4')
+    
     return Response(status=201, response=url, headers=headers)
 
 
@@ -95,94 +95,35 @@ def get_signed_url_for_recording_http(request):
     if not request_json and not 'contentType' in request_json:
         return Response(status=500, response="Error: Missing required fields.", headers=headers)
     
+    content_type = request_json['contentType']
+    
     signed_url_headers = dict()
-    signed_url_headers['content-type'] = request_json['contentType']
-    if 'meetingName' in request_json:
+    if request_json.get('meetingName'):
         signed_url_headers['x-goog-meta-name'] = request_json['meetingName']
-    if 'meetingDate' in request_json:
+    if request_json.get('meetingDate'):
         signed_url_headers['x-goog-meta-date'] = request_json['meetingDate']
-    if 'startTime' in request_json:
+    if request_json.get('startTime'):
         signed_url_headers['x-goog-meta-starttime'] = request_json['startTime']
-    if 'endTime' in request_json:
+    if request_json.get('endTime'):
         signed_url_headers['x-goog-meta-endtime'] = request_json['endTime']
-    if 'attendees' in request_json:
+    if request_json.get('attendees'):
         attendees = request_json['attendees']
         attendee_emails = []
         for attendee in attendees:
             attendee_emails.append(attendee['email'])
         signed_url_headers['x-goog-meta-attendees'] = attendee_emails
 
+    storage_client = storage.Client.from_service_account_json('service_account.json')
+
     bucket_name = os.environ.get("RECORDING_BUCKET_NAME")
     object_name = user_email + '/' + datetime.now().strftime('%Y%m%dT%H%M%SZ')
-    
-    url = generate_signed_url(bucket_name=bucket_name, object_name=object_name, method="PUT", headers=signed_url_headers)
+    file = storage_client.bucket(bucket_name).blob(object_name)
+
+    expires_at_ms = datetime.now() + timedelta(seconds=300)
+
+    if not signed_url_headers:
+        url = file.generate_signed_url(expires_at_ms, method="PUT", content_type=content_type, version='v4')
+    else:
+        url = file.generate_signed_url(expires_at_ms, method="PUT", content_type=content_type, version='v4', headers=signed_url_headers)
 
     return Response(status=201, response=url, headers=headers)
-
-# source: https://cloud.google.com/storage/docs/access-control/signing-urls-manually
-def generate_signed_url(bucket_name, object_name, expiration=3600, method='GET', headers=None):
-
-    if expiration > 604800:
-        print('Expiration Time can\'t be longer than 604800 seconds (7 days).')
-        sys.exit(1)
-
-    escaped_object_name = quote(six.ensure_binary(object_name), safe=b'/~')
-    canonical_uri = '/{}'.format(escaped_object_name)
-
-    datetime_now = datetime.utcnow()
-    request_timestamp = datetime_now.strftime('%Y%m%dT%H%M%SZ')
-    datestamp = datetime_now.strftime('%Y%m%d')
-
-    google_credentials = service_account.Credentials.from_service_account_file('service_account.json')
-    client_email = google_credentials.service_account_email
-    credential_scope = '{}/auto/storage/goog4_request'.format(datestamp)
-    credential = '{}/{}'.format(client_email, credential_scope)
-
-    if headers is None:
-        headers = dict()
-    host = '{}.storage.googleapis.com'.format(bucket_name)
-    headers['host'] = host
-
-    canonical_headers = ''
-    ordered_headers = collections.OrderedDict(sorted(headers.items()))
-    for k, v in ordered_headers.items():
-        lower_k = str(k).lower()
-        strip_v = str(v).lower()
-        canonical_headers += '{}:{}\n'.format(lower_k, strip_v)
-
-    signed_headers = ''
-    for k, _ in ordered_headers.items():
-        lower_k = str(k).lower()
-        signed_headers += '{};'.format(lower_k)
-    signed_headers = signed_headers[:-1]  # remove trailing ';'
-
-    query_parameters = dict()
-    query_parameters['X-Goog-Algorithm'] = 'GOOG4-RSA-SHA256'
-    query_parameters['X-Goog-Credential'] = credential
-    query_parameters['X-Goog-Date'] = request_timestamp
-    query_parameters['X-Goog-Expires'] = expiration
-    query_parameters['X-Goog-SignedHeaders'] = signed_headers
-
-    canonical_query_string = ''
-    ordered_query_parameters = collections.OrderedDict(
-        sorted(query_parameters.items()))
-    for k, v in ordered_query_parameters.items():
-        encoded_k = quote(str(k), safe='')
-        encoded_v = quote(str(v), safe='')
-        canonical_query_string += '{}={}&'.format(encoded_k, encoded_v)
-    canonical_query_string = canonical_query_string[:-1]  # remove trailing '&'
-
-    canonical_request = '\n'.join([method, canonical_uri, canonical_query_string,
-                                   canonical_headers, signed_headers, 'UNSIGNED-PAYLOAD'])
-
-    canonical_request_hash = hashlib.sha256(canonical_request.encode()).hexdigest()
-
-    string_to_sign = '\n'.join(['GOOG4-RSA-SHA256', request_timestamp, credential_scope, canonical_request_hash])
-
-    # signer.sign() signs using RSA-SHA256 with PKCS1v15 padding
-    signature = binascii.hexlify(google_credentials.signer.sign(string_to_sign)).decode()
-
-    scheme_and_host = '{}://{}'.format('https', host)
-    signed_url = '{}{}?{}&x-goog-signature={}'.format(scheme_and_host, canonical_uri, canonical_query_string, signature)
-
-    return signed_url

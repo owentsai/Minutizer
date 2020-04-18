@@ -1,5 +1,5 @@
-sqlalchemy
+flask
 google-cloud-storage
-Flask
-PyMySQL
 firebase-admin
+PyMySQL
+sqlalchemy
