@@ -16,7 +16,6 @@ toast.configure();
 const momentFns = new MomentUtils();
 const moment = require('moment');
 moment().format();
-let toastTime;
 
 interface inputProps {
   organizer: any;
@@ -28,7 +27,6 @@ interface inputProps {
   audioFile: any;
   placeholder: any;
 }
-
 
 class UploadTab extends React.Component<{ currentUser }, inputProps> {
   constructor(props: any) {
@@ -74,24 +72,6 @@ class UploadTab extends React.Component<{ currentUser }, inputProps> {
     if(sTimeMin <= eTimeMin){
       this.setState({ startTime: time });
     }else {
-      //Duplicate toast messages being displayed, probably due to async natuer of onChange function calls
-      // if (!toast.isActive(toastTime)){
-      //   toastTime = toast.error(
-      //       <div>
-      //         Invalid time selected!
-      //         <br />
-      //         Start time must be before or equal to end time.
-      //       </div>,
-      //       {
-      //         position: "top-center",
-      //         autoClose: 5000,
-      //         hideProgressBar: false,
-      //         closeOnClick: true,
-      //         pauseOnHover: true,
-      //         draggable: true,
-      //       }
-      //   );
-      // }
       alert("Invalid time selected, start time must be before end time.");
     }
   };
@@ -241,7 +221,7 @@ class UploadTab extends React.Component<{ currentUser }, inputProps> {
     //Pass the metadata of the file to cloud function to retrieve a signed URL where the file will be uploaded
     return this.getSignedURL(metadata)
       .then((signedURL: any) => {
-        this.sendAudioFile(signedURL).then((result: any) => {
+        this.sendAudioFile(signedURL, metadata).then((result: any) => {
           this.resetForm();
           return toast.update(toastId, {
             render: "File Upload Successful!",
@@ -283,7 +263,7 @@ class UploadTab extends React.Component<{ currentUser }, inputProps> {
     const token = await this.getUserIdToken();
     return new Promise(function (fulfill, reject) {
       const URL =
-        "https://us-central1-hacksbc-268409.cloudfunctions.net/upload_audio";
+        "https://us-central1-hacksbc-268409.cloudfunctions.net/get_signed_url_for_recording";
       const request = new XMLHttpRequest();
       const authorizationValue: string = "Bearer " + token;
       request.open("POST", URL, true);
@@ -307,7 +287,7 @@ class UploadTab extends React.Component<{ currentUser }, inputProps> {
     });
   }
 
-  sendAudioFile(signedURL: any) {
+  sendAudioFile(signedURL: any, metadata: any) {
     let file = this.state.audioFile;
     return new Promise(function (fulfill, reject) {
       let formData = new FormData();
@@ -315,6 +295,13 @@ class UploadTab extends React.Component<{ currentUser }, inputProps> {
       const request = new XMLHttpRequest();
       request.open("PUT", signedURL, true);
       request.setRequestHeader("Content-Type", file.type);
+      request.setRequestHeader("x-goog-meta-name", metadata.meetingName);
+      request.setRequestHeader("x-goog-meta-date", metadata.meetingDate);
+      request.setRequestHeader("x-goog-meta-starttime", metadata.startTime);
+      request.setRequestHeader("x-goog-meta-endtime", metadata.endTime);
+      if (metadata.attendees) {
+        request.setRequestHeader("x-goog-meta-attendees", metadata.attendees);
+      }
       request.onreadystatechange = function () {
         if (
           request.readyState === XMLHttpRequest.DONE &&
@@ -419,6 +406,7 @@ class UploadTab extends React.Component<{ currentUser }, inputProps> {
           color="default"
           startIcon={<CloudUploadIcon />}
           onClick={this.handleSubmitForm}
+          disabled={!this.state.audioFile}
         >
           Submit
         </Button>

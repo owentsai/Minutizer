@@ -151,8 +151,7 @@ class VoiceRegisterTab extends Component<
   //HTTP request using XMLHTTP
   getSignedURL(metadata: any, authHeaderValue: string) {
     return new Promise(function (fulfill, reject) {
-      const URL =
-        "https://us-central1-hacksbc-268409.cloudfunctions.net/enrol_voice_begin";
+      const URL = "https://us-central1-hacksbc-268409.cloudfunctions.net/get_signed_url_for_enrolment";
       const request = new XMLHttpRequest();
       request.open("POST", URL, true);
       request.setRequestHeader("Content-Type", "application/json");
