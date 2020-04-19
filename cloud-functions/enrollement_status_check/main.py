@@ -52,11 +52,11 @@ def enrolment_status_check_http(request):
     
     try:
         with db.connect() as conn:
-            row = conn.execute("SELECT * FROM VoiceEnrollment WHERE userEmail = %s AND voiceEnrollmentStatus IS TRUE", user_email).fetchone()
+            row = conn.execute("SELECT status FROM VoiceEnrollment WHERE userEmail = %s AND timestamp = (SELECT MAX(timestamp) FROM VoiceEnrollment WHERE userEmail = %s)", user_email).fetchone()
         if not row:
-            return Response(status=200, response=json.dumps({ "enrolled": False }), headers=headers)
+            return Response(status=200, response=json.dumps({ "enrolled": "Not Enrolled" }), headers=headers)
         else:
-            return Response(status=200, response=json.dumps({ "enrolled": True }), headers=headers)
+            return Response(status=200, response=json.dumps({ "status": row[0] }), headers=headers)
     except Exception as e:
         logger.exception(e)
         return Response(status=500, response="Error: Internal Server Error.", headers=headers)

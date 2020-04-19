@@ -295,6 +295,7 @@ class UploadTab extends React.Component<{ currentUser }, inputProps> {
       const request = new XMLHttpRequest();
       request.open("PUT", signedURL, true);
       request.setRequestHeader("Content-Type", file.type);
+      request.setRequestHeader("x-goog-meta-organizer", metadata.organizerUserName);
       request.setRequestHeader("x-goog-meta-name", metadata.meetingName);
       request.setRequestHeader("x-goog-meta-date", metadata.meetingDate);
       request.setRequestHeader("x-goog-meta-starttime", metadata.startTime);

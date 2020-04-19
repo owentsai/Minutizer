@@ -25,7 +25,7 @@ def send_email_http(request):
         return Response(status=500, response="Error: Invalid Request Method.", headers=headers)
 
     request_json = request.get_json(silent=True)
-    if not request_json and not request_json.get('recipient') and not request_json.get('subject') and not (request_json.get('html_body') or request_json.get('text_body')):
+    if not request_json and not request_json.get('recipient') and not request_json.get('subject') and not bool(request_json.get('html_body') or request_json.get('text_body')):
         return Response(status=500, response="Error: Missing required fields.", headers=headers)
     
     data = {
@@ -73,9 +73,10 @@ def send_email_http(request):
     api_secret = os.environ.get('SECRET_KEY')
     mailjet = Client(auth=(api_key, api_secret), version='v3.1')
     result = mailjet.send.create(data=data)
-    response = result.json()["Messages"][0]["Status"]
-    if response == 'error':
-        return Response(status=500, response=response, headers=headers)
+    response = result.json()["Messages"][0]
+    if response["Status"] == 'error':
+        logger.exception(response)
+        return Response(status=500, response="Error: Email could not be sent.", headers=headers)
     else:
         return Response(status=201, response="Request was successful.", headers=headers)
         
