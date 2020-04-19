@@ -30,7 +30,25 @@ def wrap_transcription(event, context):
 	bucket = client.get_bucket('minutizer_recordings')
 	blob = bucket.get_blob(path_to_file)
 	bloburl = blob.generate_signed_url(expiration=datetime.timedelta(minutes=10))
-	
+
+	metadata = blob.metadata
+	uploader_email = metadata.get('uploader')
+	organizer_email = metadata.get('organizer')
+	meeting_name = metadata.get('meetingName')
+	meeting_date = metadata.get('meetingDate')
+	start_time = metadata.get('startTime')
+	end_time = metadata.get('endTime')
+	stmt = sqlalchemy.text("INSERT INTO Meeting (meetingName, organizerEmail, uploaderEmail, startTime, endTime, meetingDate)" " VALUES (:meetingName, :organizerEmail, :startTime, :endTime, :meetingDate)")
+	try:
+		with db.connect() as conn:
+			conn.execute(stmt, meetingName=meeting_name, organizerEmail=organizer_email, uploaderEmail=uploader_email, startTime=start_time, endTime=end_time, meetingDate=meeting_date)
+		with db.connect() as conn:
+			row = conn.execute("SELECT MAX(meetingId) FROM Meeting WHERE organizerEmail = %s", (organizer_email)).fetchone()
+			meetingID = row[0]
+	except Exception as e:
+		logger.exception(e)
+		# TODO email user
+		return
 	
 	url = "https://proxy.api.deepaffects.com/audio/generic/api/v1/async/analytics/interaction"
 	
@@ -59,12 +77,11 @@ def wrap_transcription(event, context):
 	elif encoding == 'audio/flac':
 		enc = "FLAC"
 	else:
-		raise AttributeError("Wrong FileType: {}".format(encoding))
+		logger.exception("Wrong FileType: {}".format(encoding))
+		# TODO email user
+		return
 
 	payload["encoding"] = enc
-
-	meetingID = int(path_to_file.split('/')[-1].split('.')[0])
-	#Following commented section not needed until voice enrollment is in place
 	
 	try:
 		
@@ -93,11 +110,13 @@ def wrap_transcription(event, context):
 				conn.execute(stmt2, meetingID=meetingID, transcriptionID=response.json()["request_id"])	
 			else:
 				conn.execute(stmt1, meetingID=meetingID, transcriptionID=response.json()["request_id"])
-	except:	
-		print("failed to update transcriptionID")
-		print(response.json())
+	except Exception as e:	
+		logger.exception(e)
+		# TODO email user
+		return
 		
-	return response.text
+	# TODO email user
+	return
 
 
 

@@ -10,7 +10,6 @@ import os
 import sys
 import logging
 
-
 db = sqlalchemy.create_engine(
 	sqlalchemy.engine.url.URL(
 		drivername="mysql+pymysql",
@@ -20,9 +19,8 @@ db = sqlalchemy.create_engine(
 		query={"unix_socket": "/cloudsql/{}".format(os.environ.get("CLOUD_SQL_CONNECTION_NAME"))},
 	)
 )
+
 logger = logging.getLogger()
-
-
 
 
 def enroll_voice(event, context):
@@ -32,7 +30,18 @@ def enroll_voice(event, context):
 	bucket = client.get_bucket('minutizer_enrollments')
 	blob = bucket.get_blob(path_to_file)
 	bloburl = blob.generate_signed_url(expiration=datetime.timedelta(minutes=10))
-	
+
+	path_to_file_parts = path_to_file.split('/')[-1].split('_')
+	userID = path_to_file_parts[0]
+	timestamp = path_to_file_parts[1]
+	try:
+		with db.connect() as conn:
+			conn.execute("INSERT INTO VoiceEnrollment (userEmail, timestamp)" " VALUES (%s, %s)", (userID, timestamp))
+	except Exception as e:
+		logger.exception(e)
+		# TODO email user
+		return
+
 	
 	url = "https://proxy.api.deepaffects.com/audio/generic/api/v2/sync/diarization/enroll"
 	
@@ -66,23 +75,28 @@ def enroll_voice(event, context):
 
 	payload["encoding"] = enc
 
-	userID = path_to_file.split('/')[-1].split('_')[0]
 	deepaffectsID = path_to_file.split('/')[-1].split('@')[0]
 	payload["speakerId"] = deepaffectsID
 
 	response = requests.post(url, json=payload, headers=headers, params=querystring)
 	
 	if 'message' not in response.json():
-		raise RuntimeError("Deepaffects voice registration failure: {}".format(response.text))
+		logger.exception("Deepaffects voice registration failure: {}".format(response.text))
+		# TODO email user
+		return
 	else:
 		stmt = sqlalchemy.text("UPDATE VoiceEnrollment SET voiceEnrollmentStatus=:newStatus WHERE userEmail=:userID")
 		try:
 			#stmt = sqlalchemy.text("UPDATE VoiceEnrollment SET enrollmentCount=:newCount WHERE userEmail=:userID")
 			with db.connect() as conn:
 				conn.execute(stmt, newStatus=1, userID=userID)
-		except:
-			raise RuntimeError("Failure to update SQLDB with user voice enrollment status")
-	return userID
+		except Exception as e:
+			logger.exception(e)
+			# TODO email user
+			return
+
+	# TODO email user
+	return
 
 
 def query_enrollments(request):
