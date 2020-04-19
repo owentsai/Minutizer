@@ -98,6 +98,9 @@ def get_signed_url_for_recording_http(request):
     content_type = request_json['contentType']
     
     signed_url_headers = dict()
+    signed_url_headers['uploader'] = user_email
+    if request_json.get('organizer'):
+        signed_url_headers['x-goog-meta-organizer'] = request_json['organizer']
     if request_json.get('meetingName'):
         signed_url_headers['x-goog-meta-name'] = request_json['meetingName']
     if request_json.get('meetingDate'):
