@@ -20,7 +20,7 @@ db = sqlalchemy.create_engine(
 default_app = firebase_admin.initialize_app()
 logger = logging.getLogger()
 
-def enrolment_status_check_http(request):
+def get_enrollment_status_http(request):
     headers = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': '*'}
 
     if request.method == 'OPTIONS':

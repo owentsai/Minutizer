@@ -20,7 +20,7 @@ db = sqlalchemy.create_engine(
 default_app = firebase_admin.initialize_app()
 logger = logging.getLogger()
 
-def attendees_http(request):
+def get_attendees_http(request):
     headers = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Authorization'}
 
     if request.method == 'OPTIONS':

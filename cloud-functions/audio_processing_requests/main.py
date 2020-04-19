@@ -21,7 +21,7 @@ db = sqlalchemy.create_engine(
 default_app = firebase_admin.initialize_app()
 logger = logging.getLogger()
 
-def get_audio_processing_request_http(request):
+def get_audio_processing_requests_http(request):
     headers = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': '*'}
 
     if request.method == 'OPTIONS':
