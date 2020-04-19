@@ -30,7 +30,7 @@ def enroll_voice(event, context):
 	bucket = client.get_bucket('minutizer_enrollments')
 	blob = bucket.get_blob(path_to_file)
 
-	path_to_file_parts = path_to_file.split('/')[-1].split('_')
+	path_to_file_parts = path_to_file.split('/')
 	userID = path_to_file_parts[0]
 
 	timestamp = datetime.datetime.strftime(datetime.datetime.strptime(path_to_file_parts[1], '%Y%m%dT%H%M%SZ'), '%Y-%m-%d %H:%M:%S')
