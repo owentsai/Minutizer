@@ -355,8 +355,8 @@ const EnhancedTableToolbar = (props: EnhancedTableToolbarProps) => {
             aria-describedby="alert-dialog-description"
           >
             <DialogTitle id="alert-dialog-title">{popUpTitle}</DialogTitle>
-            <DialogContent>
-              <CircularProgress className="d-flex justify-content-center" />
+            <DialogContent className="text-center">
+              <CircularProgress size={50}/>
               <DialogContentText id="alert-dialog-description">
                 {dialogText}
               </DialogContentText>
@@ -467,8 +467,12 @@ function MyTable(props: { completed: boolean; currentUser: any }) {
   const [loading, setLoading] = useState<Boolean>(true);
 
   useEffect(() => {
-    fetchMeetings().then((res) => setMeetings(meetings.concat(res)));
-    setLoading(false);
+    if (loading) {
+      fetchMeetings().then((res) => {
+        setMeetings(meetings.concat(res));
+        setLoading(false);
+      });
+    }
   }, [loading]);
 
   const fetchMeetings = async () => {
@@ -602,7 +606,7 @@ function MyTable(props: { completed: boolean; currentUser: any }) {
           />
           <TableContainer>
             {loading ? (
-              <CircularProgress />
+              <CircularProgress className="mt-3" size={150} />
             ) : (
               <Table
                 className={classes.table}
