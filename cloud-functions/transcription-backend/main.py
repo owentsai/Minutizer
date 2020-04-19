@@ -20,10 +20,11 @@ db = sqlalchemy.create_engine(
 		query={"unix_socket": "/cloudsql/{}".format(os.environ.get("CLOUD_SQL_CONNECTION_NAME"))},
 	)
 )
+send_email_http_url = os.environ.get('SEND_EMAIL_HTTP_URL')
 logger = logging.getLogger()
 
 
-
+# TODO: test if email call actually works
 def wrap_transcription(event, context):
 	path_to_file = event['name']
 	client = storage.Client.from_service_account_json('service_account.json')
@@ -38,7 +39,7 @@ def wrap_transcription(event, context):
 	meeting_date = metadata.get('meetingDate')
 	start_time = metadata.get('startTime')
 	end_time = metadata.get('endTime')
-	stmt = sqlalchemy.text("INSERT INTO Meeting (meetingName, organizerEmail, uploaderEmail, startTime, endTime, meetingDate)" " VALUES (:meetingName, :organizerEmail, :startTime, :endTime, :meetingDate)")
+	stmt = sqlalchemy.text("INSERT INTO Meeting (meetingName, organizerEmail, uploaderEmail, startTime, endTime, meetingDate)" " VALUES (:meetingName, :organizerEmail, :uploaderEmail, :startTime, :endTime, :meetingDate)")
 	try:
 		with db.connect() as conn:
 			conn.execute(stmt, meetingName=meeting_name, organizerEmail=organizer_email, uploaderEmail=uploader_email, startTime=start_time, endTime=end_time, meetingDate=meeting_date)
@@ -47,8 +48,9 @@ def wrap_transcription(event, context):
 			meetingID = row[0]
 	except Exception as e:
 		logger.exception(e)
-		# TODO email user
-		return
+		return requests.post(send_email_http_url,
+                            data={ "recipient": uploader_email, "subject": "Your voice enrollment was unsuccessful!",
+                                    "text_body": "Unforunately, processing of your audio file for meeting:" + meeting_name + " was unsuccessful. Please try again." })
 	
 	url = "https://proxy.api.deepaffects.com/audio/generic/api/v1/async/analytics/interaction"
 	
@@ -78,8 +80,9 @@ def wrap_transcription(event, context):
 		enc = "FLAC"
 	else:
 		logger.exception("Wrong FileType: {}".format(encoding))
-		# TODO email user
-		return
+		return requests.post(send_email_http_url,
+                            data={ "recipient": uploader_email, "subject": "Your voice enrollment was unsuccessful!",
+                                    "text_body": "Unforunately, processing of your audio file for meeting:" + meeting_name + " was unsuccessful. Please try again." })
 
 	payload["encoding"] = enc
 	
@@ -112,11 +115,13 @@ def wrap_transcription(event, context):
 				conn.execute(stmt1, meetingID=meetingID, transcriptionID=response.json()["request_id"])
 	except Exception as e:	
 		logger.exception(e)
-		# TODO email user
-		return
+		return requests.post(send_email_http_url,
+                            data={ "recipient": uploader_email, "subject": "Your voice enrollment was unsuccessful!",
+                                    "text_body": "Unforunately, processing of your audio file for meeting:" + meeting_name + " was unsuccessful. Please try again." })
 		
-	# TODO email user
-	return
+	return requests.post(send_email_http_url,
+                            data={ "recipient": uploader_email, "subject": "Processing of your audio file has been completed!",
+                                    "text_body": "Procesisng of your audio file for meeting:" + meeting_name + "has been completed! You may now request minutes for this meeting." })
 
 
 
