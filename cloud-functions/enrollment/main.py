@@ -85,7 +85,7 @@ def enroll_voice(event, context):
 		try:
 			error = response.json()['fault']['fault_string']
 			with db.connect() as conn:
-				conn.execute("UPDATE VoiceEnrollment SET voiceEnrollmentStatus='FAILURE', error=%s WHERE userEmail=%s", (error, userID))
+				conn.execute("UPDATE VoiceEnrollment SET voiceEnrollmentStatus='FAILURE', errorString=%s WHERE userEmail=%s", (error, userID))
 		except Exception as e:
 			logger.exception(e)
 		return requests.post(send_email_http_url, headers=headers,

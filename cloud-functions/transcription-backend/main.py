@@ -146,7 +146,7 @@ def transcription_webhook(request):
 		error = request_response['fault']['fault_string']
 		try:
 			with db.connect() as conn:
-				conn.execute("UPDATE AudioProcessingRequest SET processingStatus='FAILURE', error=%s WHERE requestId=%s", (error, request_id))
+				conn.execute("UPDATE AudioProcessingRequest SET processingStatus='FAILURE', errorString=%s WHERE requestId=%s", (error, request_id))
 		except Exception as e:
 			logger.exception(e)
 		return requests.post(send_email_http_url, headers=headers,
