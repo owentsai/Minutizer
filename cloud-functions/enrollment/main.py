@@ -33,6 +33,8 @@ def enroll_voice(event, context):
 
 	path_to_file_parts = path_to_file.split('/')[-1].split('_')
 	userID = path_to_file_parts[0]
+
+	# TODO: timestamp format is not correct
 	timestamp = path_to_file_parts[1]
 	try:
 		with db.connect() as conn:

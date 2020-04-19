@@ -2,6 +2,7 @@ import firebase_admin
 from firebase_admin import auth
 from flask import escape, Response
 import json
+import datetime
 import sqlalchemy
 import os
 import sys
@@ -50,13 +51,16 @@ def get_enrollment_status_http(request):
         logger.exception(e)
         return Response(response="Error: Invalid Access.", status=401, headers=headers)
     
+    # TODO: test timedelta calculation
     try:
         with db.connect() as conn:
-            row = conn.execute("SELECT status FROM VoiceEnrollment WHERE userEmail = %s AND timestamp = (SELECT MAX(timestamp) FROM VoiceEnrollment WHERE userEmail = %s)", user_email).fetchone()
-        if not row:
-            return Response(status=200, response=json.dumps({ "enrolled": "Not Enrolled" }), headers=headers)
-        else:
-            return Response(status=200, response=json.dumps({ "status": row[0] }), headers=headers)
+            enrollment = conn.execute("SELECT timestamp, status FROM VoiceEnrollment WHERE userEmail = %s AND timestamp = (SELECT MAX(timestamp) FROM VoiceEnrollment WHERE userEmail = %s)", user_email).fetchone()
+        if not enrollment:
+            return Response(status=200, response=json.dumps({ "status": "Not Enrolled" }), headers=headers)
+        elif enrollment[1]:
+            return Response(status=200, response=json.dumps({ "status": enrollment[1] }), headers=headers)
+        elif (datetime.datetime.now() - datetime.datetime.strptime(enrollment[0])) > datetime.timedelta(1):
+            return Response(status=200, response=json.dumps({ "status": "Enrolled Unsuccessful" }), headers=headers)
     except Exception as e:
         logger.exception(e)
         return Response(status=500, response="Error: Internal Server Error.", headers=headers)
