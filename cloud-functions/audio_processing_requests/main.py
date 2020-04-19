@@ -70,12 +70,12 @@ def get_audio_processing_requests_http(request):
             if user_type == 'regular':
                 # case 1: only completed query param is passed in as true
                 if completed_bool and not inProgress_bool:
-                    stmt = sqlalchemy.text("SELECT meetingId, meetingName, meetingDate, organizerEmail FROM AudioProcessingRequest NATURAL JOIN Meeting WHERE processingCompleted IS TRUE AND (organizerEmail = :userEmail OR uploaderEmail = :userEmail) ORDER BY meetingId DESC LIMIT 20 OFFSET :offset")
-                    totalstmt = sqlalchemy.text("SELECT COUNT(*) FROM AudioProcessingRequest NATURAL JOIN Meeting WHERE processingCompleted IS TRUE AND (organizerEmail = :userEmail OR uploaderEmail = :userEmail)")
+                    stmt = sqlalchemy.text("SELECT meetingId, meetingName, meetingDate, organizerEmail FROM AudioProcessingRequest NATURAL JOIN Meeting WHERE processingStatus='SUCCESS' AND (organizerEmail = :userEmail OR uploaderEmail = :userEmail) ORDER BY meetingId DESC LIMIT 20 OFFSET :offset")
+                    totalstmt = sqlalchemy.text("SELECT COUNT(*) FROM AudioProcessingRequest NATURAL JOIN Meeting WHERE processingStatus='SUCCESS' AND (organizerEmail = :userEmail OR uploaderEmail = :userEmail)")
                 # case 2: only in progress query param is passed in as true
                 elif inProgress_bool and not completed_bool:
-                    stmt = sqlalchemy.text("SELECT meetingId, meetingName, meetingDate, organizerEmail FROM AudioProcessingRequest NATURAL JOIN Meeting WHERE processingCompleted IS NOT TRUE AND (organizerEmail = :userEmail OR uploaderEmail = :userEmail) ORDER BY meetingId DESC LIMIT 20 OFFSET :offset")
-                    totalstmt = sqlalchemy.text("SELECT COUNT(*) FROM AudioProcessingRequest NATURAL JOIN Meeting WHERE processingCompleted IS NOT TRUE AND (organizerEmail = :userEmail OR uploaderEmail = :userEmail)")
+                    stmt = sqlalchemy.text("SELECT meetingId, meetingName, meetingDate, organizerEmail FROM AudioProcessingRequest NATURAL JOIN Meeting WHERE processingStatus='INPROGRESS' AND (organizerEmail = :userEmail OR uploaderEmail = :userEmail) ORDER BY meetingId DESC LIMIT 20 OFFSET :offset")
+                    totalstmt = sqlalchemy.text("SELECT COUNT(*) FROM AudioProcessingRequest NATURAL JOIN Meeting WHERE processingStatus='INPROGRESS' AND (organizerEmail = :userEmail OR uploaderEmail = :userEmail)")
                 # case 3: any other combination results in an error
                 else:
                     return Response(response="Error: Invalid query parameters.", status=500, headers=headers)
@@ -113,12 +113,12 @@ def get_audio_processing_requests_http(request):
                     query_parameters.append(request_args['attendees'])
                 # case 1: only completed query param is passed in as true
                 if completed_bool and not inProgress_bool:
-                    stmt = "SELECT meetingId, meetingName, meetingDate, organizerEmail FROM AudioProcessingRequest NATURAL JOIN Meeting WHERE processingCompleted IS TRUE " + query_conditions + " ORDER BY meetingId DESC LIMIT 20 OFFSET %s"
-                    totalstmt = "SELECT COUNT(*) FROM AudioProcessingRequest NATURAL JOIN Meeting WHERE processingCompleted IS TRUE " + query_conditions
+                    stmt = "SELECT meetingId, meetingName, meetingDate, organizerEmail FROM AudioProcessingRequest NATURAL JOIN Meeting WHERE processingStatus='SUCCESS' " + query_conditions + " ORDER BY meetingId DESC LIMIT 20 OFFSET %s"
+                    totalstmt = "SELECT COUNT(*) FROM AudioProcessingRequest NATURAL JOIN Meeting WHERE processingStatus='SUCCESS' " + query_conditions
                 # case 2: only in progress query param is passed in as true
                 elif inProgress_bool and not completed_bool:
-                    stmt = "SELECT meetingId, meetingName, meetingDate, organizerEmail FROM AudioProcessingRequest NATURAL JOIN Meeting WHERE processingCompleted IS NOT TRUE " + query_conditions + " ORDER BY meetingId DESC LIMIT 20 OFFSET %s"
-                    totalstmt = "SELECT COUNT(*) FROM AudioProcessingRequest NATURAL JOIN Meeting WHERE processingCompleted IS NOT TRUE " + query_conditions
+                    stmt = "SELECT meetingId, meetingName, meetingDate, organizerEmail FROM AudioProcessingRequest NATURAL JOIN Meeting WHERE processingStatus='INPROGRESS' " + query_conditions + " ORDER BY meetingId DESC LIMIT 20 OFFSET %s"
+                    totalstmt = "SELECT COUNT(*) FROM AudioProcessingRequest NATURAL JOIN Meeting WHERE processingStatus='INPROGRESS' " + query_conditions
                 # case 3: any other combination results in an error
                 else:
                     return Response(response="Error: Invalid query parameters.", status=500, headers=headers)

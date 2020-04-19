@@ -36,7 +36,7 @@ def enroll_voice(event, context):
 	timestamp = datetime.datetime.strftime(datetime.datetime.strptime(path_to_file_parts[1], '%Y%m%dT%H%M%SZ'), '%Y-%m-%d %H:%M:%S')
 	try:
 		with db.connect() as conn:
-			conn.execute("INSERT INTO VoiceEnrollment (userEmail, timestamp)" " VALUES (%s, %s)", (userID, timestamp))
+			conn.execute("INSERT INTO VoiceEnrollment (userEmail, timestamp, voiceEnrollmentStatus)" " VALUES (%s, %s, %s)", (userID, timestamp, 'INPROGRESS'))
 	except Exception as e:
 		logger.exception(e)
 		return requests.post(send_email_http_url, headers=headers,
