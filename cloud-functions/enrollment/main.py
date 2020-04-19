@@ -22,14 +22,13 @@ db = sqlalchemy.create_engine(
 send_email_http_url = os.environ.get('SEND_EMAIL_HTTP_URL')
 logger = logging.getLogger()
 
-
 def enroll_voice(event, context):
+	headers = {'Content-Type': "application/json"}
 		
 	path_to_file = event['name']
 	client = storage.Client.from_service_account_json('service_account.json')
 	bucket = client.get_bucket('minutizer_enrollments')
 	blob = bucket.get_blob(path_to_file)
-	bloburl = blob.generate_signed_url(expiration=datetime.timedelta(minutes=10))
 
 	path_to_file_parts = path_to_file.split('/')[-1].split('_')
 	userID = path_to_file_parts[0]
@@ -40,8 +39,8 @@ def enroll_voice(event, context):
 			conn.execute("INSERT INTO VoiceEnrollment (userEmail, timestamp)" " VALUES (%s, %s)", (userID, timestamp))
 	except Exception as e:
 		logger.exception(e)
-		return requests.post(send_email_http_url,
-                            data={ "recipient": userID, "subject": "Your voice enrollment was unsuccessful!",
+		return requests.post(send_email_http_url, headers=headers,
+                            json={ "recipient": userID, "subject": "Your voice enrollment was unsuccessful!",
                                     "text_body": "Unforunately, your voice enrollment was unsuccessful. Please try again." })
 
 	
@@ -56,9 +55,6 @@ def enroll_voice(event, context):
 	
 	blob_bytes = blob.download_as_string(client)
 	payload["content"] = base64.b64encode(blob_bytes).decode('utf-8')
-	headers = {
-		'Content-Type': "application/json"
-		}
 
 
 	encoding = blob.content_type
@@ -74,12 +70,11 @@ def enroll_voice(event, context):
 		enc = "MP4"
 	else:
 		logger.exception("Wrong FileType: {}".format(encoding))
-		return requests.post(send_email_http_url,
-                            data={ "recipient": userID, "subject": "Your voice enrollment was unsuccessful!",
+		return requests.post(send_email_http_url, headers=headers,
+                            json={ "recipient": userID, "subject": "Your voice enrollment was unsuccessful!",
                                     "text_body": "Unforunately, your voice enrollment was unsuccessful. Please try again." })
 
 	payload["encoding"] = enc
-
 	deepaffectsID = path_to_file.split('/')[-1].split('@')[0]
 	payload["speakerId"] = deepaffectsID
 
@@ -87,24 +82,27 @@ def enroll_voice(event, context):
 	
 	if 'message' not in response.json():
 		logger.exception("Deepaffects voice registration failure: {}".format(response.text))
-		return requests.post(send_email_http_url,
-                            data={ "recipient": userID, "subject": "Your voice enrollment was unsuccessful!",
-                                    "text_body": "Unforunately, your voice enrollment was unsuccessful. Please try again." })
-
-	else:
-		stmt = sqlalchemy.text("UPDATE VoiceEnrollment SET voiceEnrollmentStatus=:newStatus WHERE userEmail=:userID")
 		try:
-			#stmt = sqlalchemy.text("UPDATE VoiceEnrollment SET enrollmentCount=:newCount WHERE userEmail=:userID")
+			error = response.json()['fault']['fault_string']
 			with db.connect() as conn:
-				conn.execute(stmt, newStatus=1, userID=userID)
+				conn.execute("UPDATE VoiceEnrollment SET voiceEnrollmentStatus='FAILURE', error=%s WHERE userEmail=%s", (error, userID))
 		except Exception as e:
 			logger.exception(e)
-			return requests.post(send_email_http_url,
-                            data={ "recipient": userID, "subject": "Your voice enrollment was unsuccessful!",
+		return requests.post(send_email_http_url, headers=headers,
+                            json={ "recipient": userID, "subject": "Your voice enrollment was unsuccessful!",
+                                    "text_body": "Unforunately, your voice enrollment was unsuccessful. Please try again." })
+	else:
+		try:
+			with db.connect() as conn:
+				conn.execute("UPDATE VoiceEnrollment SET voiceEnrollmentStatus='SUCCESS' WHERE userEmail=%s", (userID))
+		except Exception as e:
+			logger.exception(e)
+			return requests.post(send_email_http_url, headers=headers,
+                            json={ "recipient": userID, "subject": "Your voice enrollment was unsuccessful!",
                                     "text_body": "Unforunately, your voice enrollment was unsuccessful. Please try again." })
 
-	return requests.post(send_email_http_url,
-                            data={ "recipient": userID, "subject": "Your voice enrollment is complete!",
+	return requests.post(send_email_http_url, headers=headers,
+                            json={ "recipient": userID, "subject": "Your voice enrollment is complete!",
                                     "text_body": "Congratulations! You've successfully completed your voice enrollment. You may now begin to receive meeting minutes from meetings in which your voice has been identified." })
 
 

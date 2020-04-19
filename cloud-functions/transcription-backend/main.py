@@ -10,7 +10,6 @@ import os
 import sys
 import logging
 
-
 db = sqlalchemy.create_engine(
 	sqlalchemy.engine.url.URL(
 		drivername="mysql+pymysql",
@@ -21,11 +20,12 @@ db = sqlalchemy.create_engine(
 	)
 )
 send_email_http_url = os.environ.get('SEND_EMAIL_HTTP_URL')
+webhook_http_url = os.environ.get('WEBHOOK_HTTP_URL')
 logger = logging.getLogger()
 
 
-# TODO: test if email call actually works
 def wrap_transcription(event, context):
+	headers = {'Content-Type': "application/json"}
 	path_to_file = event['name']
 	client = storage.Client.from_service_account_json('service_account.json')
 	bucket = client.get_bucket('minutizer_recordings')
@@ -48,26 +48,16 @@ def wrap_transcription(event, context):
 			meetingID = row[0]
 	except Exception as e:
 		logger.exception(e)
-		return requests.post(send_email_http_url,
-                            data={ "recipient": uploader_email, "subject": "Your voice enrollment was unsuccessful!",
+		return requests.post(send_email_http_url, headers=headers,
+                            json={ "recipient": uploader_email, "subject": "Your voice enrollment was unsuccessful!",
                                     "text_body": "Unforunately, processing of your audio file for meeting:" + meeting_name + " was unsuccessful. Please try again." })
 	
 	url = "https://proxy.api.deepaffects.com/audio/generic/api/v1/async/analytics/interaction"
 	
+	querystring = {"apikey": "{}".format(os.environ['API_KEY']), "webhook": webhook_http_url}
 
-	querystring = {"apikey": "{}".format(os.environ['API_KEY']),
-			   "webhook": "https://us-central1-hacksbc-268409.cloudfunctions.net/transcription_webhook"}
-
-	payload = {
-	"languageCode": 'en-US',
-	"sampleRate": 8000,
-	"metrics": ['all']}
-	
+	payload = {"languageCode": 'en-US', "sampleRate": 8000, "metrics": ['all']}
 	payload["url"] = bloburl
-	headers = {
-		'Content-Type': "application/json"
-		}
-
 
 	encoding = blob.content_type
 	if encoding == 'audio/mp3':
@@ -80,16 +70,14 @@ def wrap_transcription(event, context):
 		enc = "FLAC"
 	else:
 		logger.exception("Wrong FileType: {}".format(encoding))
-		return requests.post(send_email_http_url,
-                            data={ "recipient": uploader_email, "subject": "Your voice enrollment was unsuccessful!",
+		return requests.post(send_email_http_url, headers=headers,
+                            json={ "recipient": uploader_email, "subject": "Your voice enrollment was unsuccessful!",
                                     "text_body": "Unforunately, processing of your audio file for meeting:" + meeting_name + " was unsuccessful. Please try again." })
 
 	payload["encoding"] = enc
 	
 	try:
-		
-		stmt = sqlalchemy.text("SELECT userEmail FROM VoiceEnrollment WHERE userEmail IN (SELECT userEmail FROM Attendance WHERE meetingId={}) AND voiceEnrollmentStatus=1".format(meetingID))
-
+		stmt = sqlalchemy.text("SELECT DISTINCT userEmail FROM VoiceEnrollment WHERE userEmail IN (SELECT userEmail FROM Attendance WHERE meetingId={}) AND voiceEnrollmentStatus='SUCCESS".format(meetingID))
 		with db.connect() as conn:
 			enrollment_ids = conn.execute(stmt).fetchall()
 	except:
@@ -98,8 +86,6 @@ def wrap_transcription(event, context):
 	enrollment_ids = [i[0].split('@')[0] for i in enrollment_ids]
 	
 	payload["speakerIds"] = enrollment_ids
-	print(enrollment_ids)
-	#payload["speakerIds"] = []
 	response = requests.post(url, json=payload, headers=headers, params=querystring)
 	
 	stmt1 = sqlalchemy.text('INSERT INTO AudioProcessingRequest (meetingId, requestId) VALUES (:meetingID, :transcriptionID)')
@@ -115,14 +101,11 @@ def wrap_transcription(event, context):
 				conn.execute(stmt1, meetingID=meetingID, transcriptionID=response.json()["request_id"])
 	except Exception as e:	
 		logger.exception(e)
-		return requests.post(send_email_http_url,
-                            data={ "recipient": uploader_email, "subject": "Your voice enrollment was unsuccessful!",
+		return requests.post(send_email_http_url, headers=headers,
+                            json={ "recipient": uploader_email, "subject": "Your voice enrollment was unsuccessful!",
                                     "text_body": "Unforunately, processing of your audio file for meeting:" + meeting_name + " was unsuccessful. Please try again." })
 		
-	return requests.post(send_email_http_url,
-                            data={ "recipient": uploader_email, "subject": "Processing of your audio file has been completed!",
-                                    "text_body": "Procesisng of your audio file for meeting:" + meeting_name + "has been completed! You may now request minutes for this meeting." })
-
+	return 0
 
 
 
@@ -132,30 +115,43 @@ def transcription_webhook(request):
 		request (flask.Request) is a json request object
 		posted by deepaffects as the transcription result
 	"""
-	try:
-		request_json = request.get_json(silent=True)
-		request_args = request.args
+	headers = {'Content-Type': "application/json"}
+
+	request_json = request.get_json(silent=True)
 	
-		request_id = request_json["request_id"]
-		request_response = request_json["response"]
-		#transcript = request_response["transcript"]
-	except:
-		raise AttributeError("Missing Data in the JSON object")
-
-
-	stmt = sqlalchemy.text('SELECT meetingId FROM AudioProcessingRequest WHERE requestId=:reqID')
+	request_id = request_json["request_id"]
+	request_response = request_json["response"]
 	try:
 		with db.connect() as conn:
-			meetingID = conn.execute(stmt, reqID=request_id).fetchone()[0]
-	except:
-		meetingID = request_id
+			row = conn.execute('SELECT meetingId, meetingName, uploaderEmail FROM AudioProcessingRequest JOIN Meeting WHERE requestId=%s', (request_id)).fetchone()
+			meetingID = row[0]
+			meeting_name = row[1]
+			uploader_email = row[2]
+	except Exception as e:
+		logger.exception(e)
+		return requests.post(send_email_http_url, headers=headers,
+                            json={ "recipient": uploader_email, "subject": "Processing of your audio file was unsuccessful!",
+                                    "text_body": "Unforunately, processing of your audio file for meeting:" + meeting_name + " was unsuccessful. Please try again." })
+		
 
+	if not request_response.get('segments'):
+		logger.exception("Missing JSON data in response.")
+		error = request_response['fault']['fault_string']
+		try:
+			with db.connect() as conn:
+				conn.execute("UPDATE AudioProcessingRequest SET audioProcessingRequestStatus='FAILURE', error=%s WHERE requestId=%s", (error, request_id))
+		except Exception as e:
+			logger.exception(e)
+		return requests.post(send_email_http_url, headers=headers,
+                            json={ "recipient": uploader_email, "subject": "Processing of your audio file was unsuccessful!",
+                                    "text_body": "Unforunately, processing of your audio file for meeting:" + meeting_name + " was unsuccessful. Please try again." })
+		
 
 	transcript_filename = '{}/{}.txt'.format('transcripts', meetingID)
 	client = storage.Client()
 	bucket = client.get_bucket('minutizer_transcriptions')
 	blob = bucket.blob(transcript_filename)
-	print(request_response)	
+	
 	segments = request_response['segments']
 	diarized_transcript = ""
 	
@@ -164,10 +160,16 @@ def transcription_webhook(request):
 
 	blob.upload_from_string(diarized_transcript)
 
-	stmt = sqlalchemy.text('UPDATE AudioProcessingRequest SET audioProcessingRequestStatus=:transcription_status WHERE requestId=:reqID')
 	try:
 		with db.connect() as conn:
-			conn.execute(stmt, transcription_status=True, reqID=request_id)
-	except:
-		raise RuntimeError("Error updating Transcription Status")
-	return request_id
+			conn.execute("UPDATE AudioProcessingRequest SET audioProcessingRequestStatus='SUCCESS' WHERE requestId=%s", (request_id))
+	except Exception as e:
+		logger.exception(e)
+		return requests.post(send_email_http_url, headers=headers,
+                            json={ "recipient": uploader_email, "subject": "Processing of your audio file was unsuccessful!",
+                                    "text_body": "Unforunately, processing of your audio file for meeting:" + meeting_name + " was unsuccessful. Please try again." })
+		
+
+	return requests.post(send_email_http_url, headers=headers,
+                            json={ "recipient": uploader_email, "subject": "Processing of your audio file has been completed!",
+                                    "text_body": "Procesisng of your audio file for meeting:" + meeting_name + "has been completed! You may now request minutes for this meeting." })

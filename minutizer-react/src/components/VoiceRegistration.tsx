@@ -81,7 +81,7 @@ class VoiceRegisterTab extends Component<
   async getEnrollmentStatus() {
     console.log("before: " + this.state.isUserEnrolled);
     const voiceEnrollmentStatusURL: string =
-      "https://us-central1-hacksbc-268409.cloudfunctions.net/enrolment_status_check";
+      "https://us-central1-hacksbc-268409.cloudfunctions.net/get_enrollment_status";
     const authorizationHeaderValue: string =
       "Bearer " + (await this.getUserIdToken());
     const header: Headers = new Headers();
