@@ -52,13 +52,22 @@ def send_email_http(request):
     if request_json.get('html_body'):
         data['Messages'][0]['HTMLPart'] = request_json['html_body']
 
-    if request_json.get('attachment'):
-        attachment = request_json['attachment']
+    if request_json.get('cc'):
+        carbon_copy = []
+        for cc in request_json['cc']:
+            carbon_copy.append({ "Email": cc, "Name": cc })
+        data['Messages'][0]['Cc'] = carbon_copy
+
+    if request_json.get('attachments'):
+        attachments = request_json['attachments']
         storage_client = storage.Client.from_service_account_json('service_account.json')
-        bucket = storage_client.bucket(attachment.bucket)
-        blob = bucket.blob(attachment.file_path)
-        data['Messages'][0]['Attachments'] =  [{ "ContentType": "text/plain", "FileName": attachment.name, 
-                                                "Base64Content":str(base64.b64encode(blob.download_as_string()), "utf-8") }]
+        email_attachments = []
+        for attachment in attachments:
+            bucket = storage_client.bucket(attachment.bucket)
+            blob = bucket.blob(attachment.file_path)
+            email_attachments.append({ "ContentType": "text/plain", "FileName": attachment.name, 
+                                                    "Base64Content":str(base64.b64encode(blob.download_as_string()), "utf-8") })
+        data['Messages'][0]['Attachments'] = email_attachments
 
     api_key = os.environ.get('API_KEY')
     api_secret = os.environ.get('SECRET_KEY')
