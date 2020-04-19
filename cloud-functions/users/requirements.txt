@@ -1,2 +1,4 @@
 sqlalchemy
+flask
 PyMySQL
+firebase-admin

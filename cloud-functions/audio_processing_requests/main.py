@@ -68,78 +68,95 @@ def get_audio_processing_requests_http(request):
             completed_bool = bool('completedProcessing' in request_args and request_args['completedProcessing'])
             inProgress_bool = bool('inProgressProcessing' in request_args and request_args['inProgressProcessing'])
             if user_type == 'regular':
-                # case 1: both completed and inprogress query params are passed in as true or none are passed in
-                if completed_bool and inProgress_bool:
-                    stmt = sqlalchemy.text("SELECT meetingId, meetingName, meetingDate, organizerEmail FROM Meeting WHERE organizerEmail = :userEmail OR uploaderEmail = :userEmail ORDER BY meetingId LIMIT 20 OFFSET :offset")
-                    totalstmt = sqlalchemy.text("SELECT COUNT(*) FROM Meeting WHERE organizerEmail = :userEmail OR uploaderEmail = :userEmail")
-                # case 2: only completed query param is passed in as true
-                elif completed_bool:
-                    stmt = sqlalchemy.text("SELECT meetingId, meetingName, meetingDate, organizerEmail FROM TranscriptionRequest NATURAL JOIN Meeting WHERE processingCompleted IS TRUE AND (organizerEmail = :userEmail OR uploaderEmail = :userEmail) ORDER BY meetingId DESC LIMIT 20 OFFSET :offset")
-                    totalstmt = sqlalchemy.text("SELECT COUNT(*) FROM TranscriptionRequest NATURAL JOIN Meeting WHERE processingCompleted IS TRUE AND (organizerEmail = :userEmail OR uploaderEmail = :userEmail)")
-                # case 3: only in progress query param is passed in as true
-                elif inProgress_bool:
-                    stmt = sqlalchemy.text("SELECT meetingId, meetingName, meetingDate, organizerEmail FROM TranscriptionRequest NATURAL JOIN Meeting WHERE processingCompleted IS NOT TRUE AND (organizerEmail = :userEmail OR uploaderEmail = :userEmail) ORDER BY meetingId DESC LIMIT 20 OFFSET :offset")
-                    totalstmt = sqlalchemy.text("SELECT COUNT(*) FROM TranscriptionRequest NATURAL JOIN Meeting WHERE processingCompleted IS NOT TRUE AND (organizerEmail = :userEmail OR uploaderEmail = :userEmail)")
-                # case 4: any other combination results in an error
+                # case 1: only completed query param is passed in as true
+                if completed_bool and not inProgress_bool:
+                    stmt = sqlalchemy.text("SELECT meetingId, meetingName, meetingDate, organizerEmail FROM AudioProcessingRequest NATURAL JOIN Meeting WHERE processingCompleted IS TRUE AND (organizerEmail = :userEmail OR uploaderEmail = :userEmail) ORDER BY meetingId DESC LIMIT 20 OFFSET :offset")
+                    totalstmt = sqlalchemy.text("SELECT COUNT(*) FROM AudioProcessingRequest NATURAL JOIN Meeting WHERE processingCompleted IS TRUE AND (organizerEmail = :userEmail OR uploaderEmail = :userEmail)")
+                # case 2: only in progress query param is passed in as true
+                elif inProgress_bool and not completed_bool:
+                    stmt = sqlalchemy.text("SELECT meetingId, meetingName, meetingDate, organizerEmail FROM AudioProcessingRequest NATURAL JOIN Meeting WHERE processingCompleted IS NOT TRUE AND (organizerEmail = :userEmail OR uploaderEmail = :userEmail) ORDER BY meetingId DESC LIMIT 20 OFFSET :offset")
+                    totalstmt = sqlalchemy.text("SELECT COUNT(*) FROM AudioProcessingRequest NATURAL JOIN Meeting WHERE processingCompleted IS NOT TRUE AND (organizerEmail = :userEmail OR uploaderEmail = :userEmail)")
+                # case 3: any other combination results in an error
                 else:
                     return Response(response="Error: Invalid query parameters.", status=500, headers=headers)
+                
+                with db.connect() as conn:
+                    rows = conn.execute(stmt, userEmail=user_email, offset=page).fetchall()
+                    for row in rows:
+                        date = row[2].strftime("%Y-%m-%d") if row[2] else None
+                        transcriptions.append({ 'meetingId': row[0], 'meetingName': row[1], 'meetingDate': date, 'organizerEmail': row[3] })
+                with db.connect() as conn:
+                    row = conn.execute(totalstmt, userEmail=user_email).fetchone()
+                    total = row[0]
             else:
-                # case 1: both completed and inprogress query params are passed in as true or none are passed in
-                if completed_bool and inProgress_bool:
-                    stmt = sqlalchemy.text("SELECT meetingId, meetingName, meetingDate, organizerEmail FROM Meeting ORDER BY meetingId LIMIT 20 OFFSET :offset")
-                    totalstmt = sqlalchemy.text("SELECT COUNT(*) FROM Meeting")
-                # case 2: only completed query param is passed in as true
-                elif completed_bool:
-                    stmt = sqlalchemy.text("SELECT meetingId, meetingName, meetingDate, organizerEmail FROM TranscriptionRequest NATURAL JOIN Meeting WHERE processingCompleted IS TRUE ORDER BY meetingId DESC LIMIT 20 OFFSET :offset")
-                    totalstmt = sqlalchemy.text("SELECT COUNT(*) FROM TranscriptionRequest NATURAL JOIN Meeting WHERE processingCompleted IS TRUE")
-                # case 3: only in progress query param is passed in as true
-                elif inProgress_bool:
-                    stmt = sqlalchemy.text("SELECT meetingId, meetingName, meetingDate, organizerEmail FROM TranscriptionRequest NATURAL JOIN Meeting WHERE processingCompleted IS NOT TRUE ORDER BY meetingId DESC LIMIT 20 OFFSET :offset")
-                    totalstmt = sqlalchemy.text("SELECT COUNT(*) FROM TranscriptionRequest NATURAL JOIN Meeting WHERE processingCompleted IS NOT TRUE")
-                # case 4: any other combination results in an error
+                query_conditions = ''
+                query_parameters = []
+                if request_args.get('organizerEmail'):
+                    query_conditions += 'AND organizerEmail=%s'
+                    query_parameters.append(request_args['organizerEmail'])
+                if request_args.get('meetingName'):
+                    query_conditions += 'AND meetingName=%s'
+                    query_parameters.append(request_args['meetingName'])
+                if request_args.get('meetingDate'):
+                    query_conditions += 'AND meetingDate=%s'
+                    query_parameters.append(request_args['meetingDate'])
+                if request_args.get('startTime'):
+                    query_conditions += 'AND startTime=%s'
+                    query_parameters.append(request_args['startTime'])
+                if request_args.get('endTime'):
+                    query_conditions += 'AND endTime=%s'
+                    query_parameters.append(request_args['endTime'])
+                if request_args.get('attendees'):
+                    placeholder = '%s'
+                    placeholders = ', '.join(placeholder*len(request_args['attendees']))
+                    query_conditions += 'AND meetingId IN (SELECT meetingId FROM Attendance WHERE userEmail IN (%s))' % placeholders
+                    query_parameters.append(request_args['attendees'])
+                # case 1: only completed query param is passed in as true
+                if completed_bool and not inProgress_bool:
+                    stmt = "SELECT meetingId, meetingName, meetingDate, organizerEmail FROM AudioProcessingRequest NATURAL JOIN Meeting WHERE processingCompleted IS TRUE " + query_conditions + " ORDER BY meetingId DESC LIMIT 20 OFFSET %s"
+                    totalstmt = "SELECT COUNT(*) FROM AudioProcessingRequest NATURAL JOIN Meeting WHERE processingCompleted IS TRUE " + query_conditions
+                # case 2: only in progress query param is passed in as true
+                elif inProgress_bool and not completed_bool:
+                    stmt = "SELECT meetingId, meetingName, meetingDate, organizerEmail FROM AudioProcessingRequest NATURAL JOIN Meeting WHERE processingCompleted IS NOT TRUE " + query_conditions + " ORDER BY meetingId DESC LIMIT 20 OFFSET %s"
+                    totalstmt = "SELECT COUNT(*) FROM AudioProcessingRequest NATURAL JOIN Meeting WHERE processingCompleted IS NOT TRUE " + query_conditions
+                # case 3: any other combination results in an error
                 else:
                     return Response(response="Error: Invalid query parameters.", status=500, headers=headers)
+                
+                with db.connect() as conn:
+                    rows = conn.execute(stmt, query_parameters + (page)).fetchall()
+                    for row in rows:
+                        date = row[2].strftime("%Y-%m-%d") if row[2] else None
+                        transcriptions.append({ 'meetingId': row[0], 'meetingName': row[1], 'meetingDate': date, 'organizerEmail': row[3] })
+                with db.connect() as conn:
+                    row = conn.execute(totalstmt, query_parameters).fetchone()
+                    total = row[0]
         else:
             if user_type == 'regular':
                 stmt = sqlalchemy.text("SELECT meetingId, meetingName, meetingDate, organizerEmail FROM Meeting WHERE organizerEmail = :userEmail ORDER BY meetingId LIMIT 20 OFFSET :offset")
                 totalstmt = sqlalchemy.text("SELECT COUNT(*) FROM Meeting WHERE organizerEmail = :userEmail")
+                
+                with db.connect() as conn:
+                    rows = conn.execute(stmt, userEmail=user_email, offset=page).fetchall()
+                    for row in rows:
+                        date = row[2].strftime("%Y-%m-%d") if row[2] else None
+                        transcriptions.append({ 'meetingId': row[0], 'meetingName': row[1], 'meetingDate': date, 'organizerEmail': row[3] })
+                with db.connect() as conn:
+                    row = conn.execute(totalstmt, userEmail=user_email).fetchone()
+                    total = row[0]
             else:
                 stmt = sqlalchemy.text("SELECT meetingId, meetingName, meetingDate, organizerEmail FROM Meeting ORDER BY meetingId LIMIT 20 OFFSET :offset")
                 totalstmt = sqlalchemy.text("SELECT COUNT(*) FROM Meeting")
+                
+                with db.connect() as conn:
+                    rows = conn.execute(stmt, offset=page).fetchall()
+                    for row in rows:
+                        date = row[2].strftime("%Y-%m-%d") if row[2] else None
+                        transcriptions.append({ 'meetingId': row[0], 'meetingName': row[1], 'meetingDate': date, 'organizerEmail': row[3] })
+                with db.connect() as conn:
+                    row = conn.execute(totalstmt).fetchone()
+                    total = row[0]
 
-        if user_type == 'regular':
-            with db.connect() as conn:
-                rows = conn.execute(stmt, userEmail=user_email, offset=page).fetchall()
-                for row in rows:
-                    date = None
-                    if row[2]:
-                        date = row[2].strftime("%Y-%m-%d")
-                    transcriptions.append({
-                        'meetingId': row[0],
-                        'meetingName': row[1],
-                        'meetingDate': date ,
-                        'organizerEmail': row[3]
-                    })
-            with db.connect() as conn:
-                row = conn.execute(totalstmt, userEmail=user_email).fetchone()
-                total = row[0]
-        else:
-            with db.connect() as conn:
-                rows = conn.execute(stmt, offset=page).fetchall()
-                for row in rows:
-                    date = None
-                    if row[2]:
-                        date = row[2].strftime("%Y-%m-%d")
-                    transcriptions.append({
-                        'meetingId': row[0],
-                        'meetingName': row[1],
-                        'meetingDate': date,
-                        'organizerEmail': row[3]
-                    })
-            with db.connect() as conn:
-                row = conn.execute(totalstmt).fetchone()
-                total = row[0]
-        
         return Response(response=json.dumps({ "total": total, "data": transcriptions }), status=200, headers=headers)
 
     except Exception as e:

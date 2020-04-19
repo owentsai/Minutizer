@@ -38,14 +38,14 @@ CREATE TABLE `Attendance` (
   CONSTRAINT `Attendance_ibfk_2` FOREIGN KEY (`userEmail`) REFERENCES `User` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE `TranscriptionRequest` (
+CREATE TABLE `AudioProcessingRequest` (
   `requestId` varchar(255) NOT NULL,
   `meetingId` int(11) NOT NULL,
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `processingCompleted` tinyint(1) DEFAULT '0',
   PRIMARY KEY (`requestId`,`meetingId`),
   KEY `meetingId` (`meetingId`),
-  CONSTRAINT `TranscriptionRequest_ibfk_1` FOREIGN KEY (`meetingId`) REFERENCES `Meeting` (`meetingId`)
+  CONSTRAINT `AudioProcessingRequest_ibfk_1` FOREIGN KEY (`meetingId`) REFERENCES `Meeting` (`meetingId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 

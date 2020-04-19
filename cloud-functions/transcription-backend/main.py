@@ -102,12 +102,12 @@ def wrap_transcription(event, context):
 	#payload["speakerIds"] = []
 	response = requests.post(url, json=payload, headers=headers, params=querystring)
 	
-	stmt1 = sqlalchemy.text('INSERT INTO TranscriptionRequest (meetingId, requestId) VALUES (:meetingID, :transcriptionID)')
-	stmt2 = sqlalchemy.text('UPDATE TranscriptionRequest SET requestId=:transcriptionID WHERE meetingId=:meetingID')
+	stmt1 = sqlalchemy.text('INSERT INTO AudioProcessingRequest (meetingId, requestId) VALUES (:meetingID, :transcriptionID)')
+	stmt2 = sqlalchemy.text('UPDATE AudioProcessingRequest SET requestId=:transcriptionID WHERE meetingId=:meetingID')
 	
 	try:
 		with db.connect() as conn:
-			test_statement = sqlalchemy.text('SELECT requestId FROM TranscriptionRequest WHERE EXISTS (SELECT requestId FROM TranscriptionRequest WHERE meetingId=:meeting_id)')
+			test_statement = sqlalchemy.text('SELECT requestId FROM AudioProcessingRequest WHERE EXISTS (SELECT requestId FROM AudioProcessingRequest WHERE meetingId=:meeting_id)')
 			case = conn.execute(test_statement, meeting_id=meetingID)
 			if case.fetchone():
 				conn.execute(stmt2, meetingID=meetingID, transcriptionID=response.json()["request_id"])	
@@ -143,7 +143,7 @@ def transcription_webhook(request):
 		raise AttributeError("Missing Data in the JSON object")
 
 
-	stmt = sqlalchemy.text('SELECT meetingId FROM TranscriptionRequest WHERE requestId=:reqID')
+	stmt = sqlalchemy.text('SELECT meetingId FROM AudioProcessingRequest WHERE requestId=:reqID')
 	try:
 		with db.connect() as conn:
 			meetingID = conn.execute(stmt, reqID=request_id).fetchone()[0]
@@ -164,7 +164,7 @@ def transcription_webhook(request):
 
 	blob.upload_from_string(diarized_transcript)
 
-	stmt = sqlalchemy.text('UPDATE TranscriptionRequest SET processingCompleted=:transcription_status WHERE requestId=:reqID')
+	stmt = sqlalchemy.text('UPDATE AudioProcessingRequest SET audioProcessingRequestStatus=:transcription_status WHERE requestId=:reqID')
 	try:
 		with db.connect() as conn:
 			conn.execute(stmt, transcription_status=True, reqID=request_id)
