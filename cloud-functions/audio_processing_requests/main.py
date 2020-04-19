@@ -21,7 +21,7 @@ db = sqlalchemy.create_engine(
 default_app = firebase_admin.initialize_app()
 logger = logging.getLogger()
 
-def file_processing_status_http(request):
+def get_audio_processing_request_http(request):
     headers = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': '*'}
 
     if request.method == 'OPTIONS':
@@ -70,16 +70,16 @@ def file_processing_status_http(request):
             if user_type == 'regular':
                 # case 1: both completed and inprogress query params are passed in as true or none are passed in
                 if completed_bool and inProgress_bool:
-                    stmt = sqlalchemy.text("SELECT meetingId, meetingName, meetingDate, organizerEmail FROM Meeting WHERE organizerEmail = :userEmail ORDER BY meetingId LIMIT 20 OFFSET :offset")
-                    totalstmt = sqlalchemy.text("SELECT COUNT(*) FROM Meeting WHERE organizerEmail = :userEmail")
+                    stmt = sqlalchemy.text("SELECT meetingId, meetingName, meetingDate, organizerEmail FROM Meeting WHERE organizerEmail = :userEmail OR uploaderEmail = :userEmail ORDER BY meetingId LIMIT 20 OFFSET :offset")
+                    totalstmt = sqlalchemy.text("SELECT COUNT(*) FROM Meeting WHERE organizerEmail = :userEmail OR uploaderEmail = :userEmail")
                 # case 2: only completed query param is passed in as true
                 elif completed_bool:
-                    stmt = sqlalchemy.text("SELECT meetingId, meetingName, meetingDate, organizerEmail FROM TranscriptionRequest NATURAL JOIN Meeting WHERE processingCompleted IS TRUE AND organizerEmail = :userEmail ORDER BY meetingId DESC LIMIT 20 OFFSET :offset")
-                    totalstmt = sqlalchemy.text("SELECT COUNT(*) FROM TranscriptionRequest NATURAL JOIN Meeting WHERE processingCompleted IS TRUE AND organizerEmail = :userEmail")
+                    stmt = sqlalchemy.text("SELECT meetingId, meetingName, meetingDate, organizerEmail FROM TranscriptionRequest NATURAL JOIN Meeting WHERE processingCompleted IS TRUE AND (organizerEmail = :userEmail OR uploaderEmail = :userEmail) ORDER BY meetingId DESC LIMIT 20 OFFSET :offset")
+                    totalstmt = sqlalchemy.text("SELECT COUNT(*) FROM TranscriptionRequest NATURAL JOIN Meeting WHERE processingCompleted IS TRUE AND (organizerEmail = :userEmail OR uploaderEmail = :userEmail)")
                 # case 3: only in progress query param is passed in as true
                 elif inProgress_bool:
-                    stmt = sqlalchemy.text("SELECT meetingId, meetingName, meetingDate, organizerEmail FROM TranscriptionRequest NATURAL JOIN Meeting WHERE processingCompleted IS NOT TRUE AND organizerEmail = :userEmail ORDER BY meetingId DESC LIMIT 20 OFFSET :offset")
-                    totalstmt = sqlalchemy.text("SELECT COUNT(*) FROM TranscriptionRequest NATURAL JOIN Meeting WHERE processingCompleted IS NOT TRUE AND organizerEmail = :userEmail")
+                    stmt = sqlalchemy.text("SELECT meetingId, meetingName, meetingDate, organizerEmail FROM TranscriptionRequest NATURAL JOIN Meeting WHERE processingCompleted IS NOT TRUE AND (organizerEmail = :userEmail OR uploaderEmail = :userEmail) ORDER BY meetingId DESC LIMIT 20 OFFSET :offset")
+                    totalstmt = sqlalchemy.text("SELECT COUNT(*) FROM TranscriptionRequest NATURAL JOIN Meeting WHERE processingCompleted IS NOT TRUE AND (organizerEmail = :userEmail OR uploaderEmail = :userEmail)")
                 # case 4: any other combination results in an error
                 else:
                     return Response(response="Error: Invalid query parameters.", status=500, headers=headers)
