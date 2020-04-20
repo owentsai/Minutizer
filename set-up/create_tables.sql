@@ -11,9 +11,10 @@ CREATE TABLE `User` (
 
 CREATE TABLE `VoiceEnrollment` (
   `userEmail` varchar(255) NOT NULL,
-  `enrollmentCount` int(11) DEFAULT NULL,
-  `voiceEnrollmentStatus` tinyint(1) DEFAULT '0',
-  PRIMARY KEY (`userEmail`),
+  `timestamp` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `voiceEnrollmentStatus` ENUM ('SUCCESS', 'FAILURE', 'INPROGRESS') DEFAULT 'FAILURE' NOT NULL,
+  `errorString` TEXT,
+  PRIMARY KEY (`userEmail`, `timestamp`),
   CONSTRAINT `VoiceEnrollment_ibfk_1` FOREIGN KEY (`userEmail`) REFERENCES `User` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -21,6 +22,7 @@ CREATE TABLE `Meeting` (
   `meetingId` int(11) NOT NULL AUTO_INCREMENT,
   `meetingName` varchar(255) DEFAULT NULL,
   `organizerEmail` varchar(255) DEFAULT NULL,
+  `uploaderEmail` varchar(255) DEFAULT NULL,
   `startTime` time DEFAULT NULL,
   `endTime` time DEFAULT NULL,
   `meetingDate` date DEFAULT NULL,
@@ -42,11 +44,9 @@ CREATE TABLE `AudioProcessingRequest` (
   `requestId` varchar(255) NOT NULL,
   `meetingId` int(11) NOT NULL,
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `processingCompleted` tinyint(1) DEFAULT '0',
+  `processingStatus` ENUM ('SUCCESS', 'FAILURE', 'INPROGRESS') DEFAULT 'FAILURE' NOT NULL,
+  `errorString` TEXT,
   PRIMARY KEY (`requestId`,`meetingId`),
   KEY `meetingId` (`meetingId`),
   CONSTRAINT `AudioProcessingRequest_ibfk_1` FOREIGN KEY (`meetingId`) REFERENCES `Meeting` (`meetingId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-
-
