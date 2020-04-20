@@ -53,6 +53,8 @@ def wrap_transcription(event, context):
 	encoding = blob.content_type
 	if encoding == 'audio/mp3':
 		enc = "MP3"
+	elif encoding == 'audio/mpeg':
+		enc = "MP3"
 	elif encoding == 'audio/wav':
 		enc = "WAV"
 	elif encoding == 'audio/mp4':
@@ -107,6 +109,7 @@ def transcription_webhook(request):
 		posted by deepaffects as the transcription result
 	"""
 	headers = {'Content-Type': "application/json"}
+	meeting_name = ""
 	try:
 		request_json = request.get_json(silent=True)
 		request_id = request_json["request_id"]
@@ -116,10 +119,12 @@ def transcription_webhook(request):
 
 	try:
 		with db.connect() as conn:
-			row = conn.execute('SELECT Meeting.meetingId, meetingName, uploaderEmail FROM AudioProcessingRequest JOIN Meeting WHERE requestId=%s', (request_id)).fetchone()
-			meetingID = row[0]
-			meeting_name = row[1]
-			uploader_email = row[2]
+			meetingID = conn.execute('SELECT meetingId FROM AudioProcessingRequest WHERE requestId=%s', (request_id)).fetchone()[0]
+			
+			row = conn.execute("SELECT meetingName, uploaderEmail FROM Meeting WHERE meetingId={}".format(meetingID)) 
+			meeting_name = row[0]
+			uploader_email = row[1]
+			
 	except Exception as e:
 		logger.exception(e)
 		raise RuntimeError("Could not retrieve meeting data.")
