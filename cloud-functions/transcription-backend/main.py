@@ -63,10 +63,10 @@ def wrap_transcription(event, context):
 		enc = "FLAC"
 	else:
 		logger.exception("Wrong FileType: {}".format(encoding))
-		return requests.post(send_email_http_url, headers=headers,
+		requests.post(send_email_http_url, headers=headers,
                             json={ "recipient": uploader_email, "subject": "Processing of your audio file was unsuccessful!",
                                     "text_body": "Unforunately, processing of your audio file for meeting:" + meeting_name + " was unsuccessful. Please try again." })
-
+		return 0
 	payload["encoding"] = enc
 
 	try:
@@ -94,10 +94,10 @@ def wrap_transcription(event, context):
 				conn.execute(stmt1, meetingID=meetingID, transcriptionID=response.json()["request_id"], status='INPROGRESS')
 	except Exception as e:	
 		logger.exception(e)
-		return requests.post(send_email_http_url, headers=headers,
+		requests.post(send_email_http_url, headers=headers,
                             json={ "recipient": uploader_email, "subject": "Processing of your audio file was unsuccessful!",
                                     "text_body": "Unforunately, processing of your audio file for meeting:" + meeting_name + " was unsuccessful. Please try again." })
-		
+		return 0
 	return 0
 
 
@@ -137,9 +137,11 @@ def transcription_webhook(request):
 				conn.execute("UPDATE AudioProcessingRequest SET processingStatus='FAILURE', errorString=%s WHERE requestId=%s", (error, request_id))
 		except Exception as e:
 			logger.exception(e)
-		return requests.post(send_email_http_url, headers=headers,
+		requests.post(send_email_http_url, headers=headers,
                             json={ "recipient": uploader_email, "subject": "Processing of your audio file was unsuccessful!",
                                     "text_body": "Unforunately, processing of your audio file for meeting:" + meeting_name + " was unsuccessful. Please try again." })
+		return 0
+
 
 	transcript_filename = '{}/{}.txt'.format('transcripts', meetingID)
 	client = storage.Client()
@@ -159,10 +161,13 @@ def transcription_webhook(request):
 			conn.execute("UPDATE AudioProcessingRequest SET processingStatus='SUCCESS' WHERE requestId=%s", (request_id))
 	except Exception as e:
 		logger.exception(e)
-		return requests.post(send_email_http_url, headers=headers,
+		requests.post(send_email_http_url, headers=headers,
                             json={ "recipient": uploader_email, "subject": "Processing of your audio file was unsuccessful!",
                                     "text_body": "Unforunately, processing of your audio file for meeting:" + meeting_name + " was unsuccessful. Please try again." })
+		return 0
 		
-	return requests.post(send_email_http_url, headers=headers,
+	requests.post(send_email_http_url, headers=headers,
                             json={ "recipient": uploader_email, "subject": "Processing of your audio file has been completed!",
                                     "text_body": "Procesisng of your audio file for meeting:" + meeting_name + "has been completed! You may now request minutes for this meeting." })
+
+	return 0
