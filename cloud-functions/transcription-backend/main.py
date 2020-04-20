@@ -31,15 +31,17 @@ def wrap_transcription(event, context):
 	bucket = client.get_bucket('minutizer_recordings')
 	blob = bucket.get_blob(path_to_file)
 	bloburl = blob.generate_signed_url(expiration=datetime.timedelta(minutes=10))
+
+	uploader_email = path_to_file.split('/')[0]
+	try:
+		with db.connect() as conn:
+			row = conn.execute("SELECT meetingId, meetingName FROM Meeting WHERE meetingId=(SELECT MAX(meetingId) FROM Meeting WHERE uploaderEmail = %s)", (uploader_email)).fetchone()
+			meetingID = row[0]
+			meeting_name = row[1]
+	except Exception as e:
+		logger.exception(e)
+		raise RuntimeError("Could not retrieve meeting data.")
 	
-	metadata = blob.metadata
-	uploader_email = metadata.get('uploader')
-	organizer_email = metadata.get('organizer')
-	meeting_name = metadata.get('meetingName')
-	meeting_date = metadata.get('meetingDate')
-	start_time = metadata.get('startTime')
-	end_time = metadata.get('endTime')
-	attendees = metadata.get('attendees')
 	
 	url = "https://proxy.api.deepaffects.com/audio/generic/api/v1/async/analytics/interaction"
 	
@@ -65,25 +67,6 @@ def wrap_transcription(event, context):
 
 	payload["encoding"] = enc
 
-	stmt = sqlalchemy.text("INSERT INTO Meeting (meetingName, organizerEmail, uploaderEmail, startTime, endTime, meetingDate)" " VALUES (:meetingName, :organizerEmail, :uploaderEmail, :startTime, :endTime, :meetingDate)")
-	try:
-		with db.connect() as conn:
-			conn.execute(stmt, meetingName=meeting_name, organizerEmail=organizer_email, uploaderEmail=uploader_email, startTime=start_time, endTime=end_time, meetingDate=meeting_date)
-		with db.connect() as conn:
-			row = conn.execute("SELECT MAX(meetingId) FROM Meeting WHERE organizerEmail = %s", (organizer_email)).fetchone()
-			meetingID = row[0]
-		if attendees:
-			values = []
-			for attendee in attendees:
-				values.append((meetingID, attendee['email']))
-			with db.connect() as conn:
-				conn.execute("INSERT INTO Attendance (meetingId, userEmail) VALUES (%s, %s)", values)   
-	except Exception as e:
-		logger.exception(e)
-		return requests.post(send_email_http_url, headers=headers,
-                            json={ "recipient": uploader_email, "subject": "Processing of your audio file was unsuccessful!",
-                                    "text_body": "Unforunately, processing of your audio file for meeting:" + meeting_name + " was unsuccessful. Please try again." })
-	
 	try:
 		stmt = sqlalchemy.text("SELECT DISTINCT userEmail FROM VoiceEnrollment WHERE userEmail IN (SELECT userEmail FROM Attendance WHERE meetingId={}) AND voiceEnrollmentStatus='SUCCESS".format(meetingID))
 		with db.connect() as conn:
@@ -133,7 +116,7 @@ def transcription_webhook(request):
 
 	try:
 		with db.connect() as conn:
-			row = conn.execute('SELECT meetingId, meetingName, uploaderEmail FROM AudioProcessingRequest JOIN Meeting WHERE requestId=%s', (request_id)).fetchone()
+			row = conn.execute('SELECT Meeting.meetingId, meetingName, uploaderEmail FROM AudioProcessingRequest JOIN Meeting WHERE requestId=%s', (request_id)).fetchone()
 			meetingID = row[0]
 			meeting_name = row[1]
 			uploader_email = row[2]

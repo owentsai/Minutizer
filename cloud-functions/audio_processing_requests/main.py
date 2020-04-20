@@ -95,22 +95,17 @@ def get_audio_processing_requests_http(request):
                     query_conditions += 'AND organizerEmail=%s'
                     query_parameters.append(request_args['organizerEmail'])
                 if request_args.get('meetingName'):
-                    query_conditions += 'AND meetingName=%s'
-                    query_parameters.append(request_args['meetingName'])
+                    query_conditions += 'AND meetingName LIKE %s'
+                    query_parameters.append("%{}%".format(request_args['meetingName']))
                 if request_args.get('meetingDate'):
                     query_conditions += 'AND meetingDate=%s'
                     query_parameters.append(request_args['meetingDate'])
                 if request_args.get('startTime'):
-                    query_conditions += 'AND startTime=%s'
+                    query_conditions += 'AND startTime>=%s'
                     query_parameters.append(request_args['startTime'])
                 if request_args.get('endTime'):
-                    query_conditions += 'AND endTime=%s'
+                    query_conditions += 'AND endTime<=%s'
                     query_parameters.append(request_args['endTime'])
-                if request_args.get('attendees'):
-                    placeholder = '%s'
-                    placeholders = ', '.join(placeholder*len(request_args['attendees']))
-                    query_conditions += 'AND meetingId IN (SELECT meetingId FROM Attendance WHERE userEmail IN (%s))' % placeholders
-                    query_parameters.append(request_args['attendees'])
                 # case 1: only completed query param is passed in as true
                 if completed_bool and not inProgress_bool:
                     stmt = "SELECT meetingId, meetingName, meetingDate, organizerEmail FROM AudioProcessingRequest NATURAL JOIN Meeting WHERE processingStatus='SUCCESS' " + query_conditions + " ORDER BY meetingId DESC LIMIT 20 OFFSET %s"
@@ -124,7 +119,7 @@ def get_audio_processing_requests_http(request):
                     return Response(response="Error: Invalid query parameters.", status=500, headers=headers)
                 
                 with db.connect() as conn:
-                    rows = conn.execute(stmt, query_parameters + (page)).fetchall()
+                    rows = conn.execute(stmt, query_parameters + [page]).fetchall()
                     for row in rows:
                         date = row[2].strftime("%Y-%m-%d") if row[2] else None
                         transcriptions.append({ 'meetingId': row[0], 'meetingName': row[1], 'meetingDate': date, 'organizerEmail': row[3] })

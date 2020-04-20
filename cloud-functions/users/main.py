@@ -76,7 +76,7 @@ def get_users_http(request):
                with db.connect() as conn:
                     row = conn.execute("SELECT userType FROM User WHERE email = %s", (user_email)).fetchone()
                     user_type = row[0]
-                    return Response(response=json.dumps({ "email": user_email, "userTyle": user_type }), status=200, headers=headers)
+                    return Response(response=json.dumps({ "email": user_email, "userType": user_type }), status=200, headers=headers)
           elif not search_term == "":
                with db.connect() as conn:
                     rows = conn.execute("SELECT email FROM User WHERE email LIKE %s ORDER BY email LIMIT 20 OFFSET %s", ("%{}%".format(search_term), page)).fetchall()

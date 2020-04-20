@@ -132,7 +132,7 @@ class UploadTab extends React.Component<{ currentUser }, inputProps> {
     const token = await this.getUserIdToken();
     return new Promise(function (fulfill, reject) {
       let url =
-        "https://us-central1-hacksbc-268409.cloudfunctions.net/attendees";
+        "https://us-central1-hacksbc-268409.cloudfunctions.net/get_users";
       if (inputValue && inputValue !== "") {
         url = url + "?search=" + inputValue;
       }
@@ -221,7 +221,7 @@ class UploadTab extends React.Component<{ currentUser }, inputProps> {
     //Pass the metadata of the file to cloud function to retrieve a signed URL where the file will be uploaded
     return this.getSignedURL(metadata)
       .then((signedURL: any) => {
-        this.sendAudioFile(signedURL, metadata).then((result: any) => {
+        this.sendAudioFile(signedURL).then((result: any) => {
           this.resetForm();
           return toast.update(toastId, {
             render: "File Upload Successful!",
@@ -287,7 +287,7 @@ class UploadTab extends React.Component<{ currentUser }, inputProps> {
     });
   }
 
-  sendAudioFile(signedURL: any, metadata: any) {
+  sendAudioFile(signedURL: any) {
     let file = this.state.audioFile;
     return new Promise(function (fulfill, reject) {
       let formData = new FormData();
@@ -295,14 +295,6 @@ class UploadTab extends React.Component<{ currentUser }, inputProps> {
       const request = new XMLHttpRequest();
       request.open("PUT", signedURL, true);
       request.setRequestHeader("Content-Type", file.type);
-      request.setRequestHeader("x-goog-meta-organizer", metadata.organizerUserName);
-      request.setRequestHeader("x-goog-meta-name", metadata.meetingName);
-      request.setRequestHeader("x-goog-meta-date", metadata.meetingDate);
-      request.setRequestHeader("x-goog-meta-starttime", metadata.startTime);
-      request.setRequestHeader("x-goog-meta-endtime", metadata.endTime);
-      if (metadata.attendees) {
-        request.setRequestHeader("x-goog-meta-attendees", metadata.attendees);
-      }
       request.onreadystatechange = function () {
         if (
           request.readyState === XMLHttpRequest.DONE &&

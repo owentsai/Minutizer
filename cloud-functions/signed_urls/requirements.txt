@@ -1,3 +1,5 @@
 google-cloud-storage
 Flask
 firebase-admin
+PyMySQL
+sqlalchemy

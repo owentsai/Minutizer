@@ -3,10 +3,22 @@ from firebase_admin import auth
 from google.cloud import storage
 from flask import escape, Response
 from datetime import datetime, timedelta
+import sqlalchemy
+import requests
 import os
 import sys
 import logging
 
+db = sqlalchemy.create_engine(
+	sqlalchemy.engine.url.URL(
+		drivername="mysql+pymysql",
+		username=os.environ.get("DB_USER"),
+		password=os.environ.get("DB_PASS"),
+		database=os.environ.get("DB_NAME"),
+		query={"unix_socket": "/cloudsql/{}".format(os.environ.get("CLOUD_SQL_CONNECTION_NAME"))},
+	)
+)
+send_email_http_url = os.environ.get('SEND_EMAIL_HTTP_URL')
 default_app = firebase_admin.initialize_app()
 logger = logging.getLogger()
 
@@ -97,24 +109,44 @@ def get_signed_url_for_recording_http(request):
     
     content_type = request_json['contentType']
     
-    signed_url_headers = dict()
-    signed_url_headers['uploader'] = user_email
+    uploader_email = user_email
+    organizer_email = None
+    meeting_name = None
+    meeting_date = None
+    start_time = None
+    end_time = None
+    attendees = []
     if request_json.get('organizer'):
-        signed_url_headers['x-goog-meta-organizer'] = request_json['organizer']
+        organizer_email = request_json['organizer']
     if request_json.get('meetingName'):
-        signed_url_headers['x-goog-meta-name'] = request_json['meetingName']
+        meeting_name = request_json['meetingName']
     if request_json.get('meetingDate'):
-        signed_url_headers['x-goog-meta-date'] = request_json['meetingDate']
+        meeting_date = request_json['meetingDate']
     if request_json.get('startTime'):
-        signed_url_headers['x-goog-meta-starttime'] = request_json['startTime']
+        start_time = request_json['startTime']
     if request_json.get('endTime'):
-        signed_url_headers['x-goog-meta-endtime'] = request_json['endTime']
+        end_time = request_json['endTime']
     if request_json.get('attendees'):
         attendees = request_json['attendees']
-        attendee_emails = []
-        for attendee in attendees:
-            attendee_emails.append(attendee['email'])
-        signed_url_headers['x-goog-meta-attendees'] = attendee_emails
+
+    stmt = sqlalchemy.text("INSERT INTO Meeting (meetingName, organizerEmail, uploaderEmail, startTime, endTime, meetingDate)" " VALUES (:meetingName, :organizerEmail, :uploaderEmail, :startTime, :endTime, :meetingDate)")
+    try:
+        with db.connect() as conn:
+            conn.execute(stmt, meetingName=meeting_name, organizerEmail=organizer_email, uploaderEmail=uploader_email, startTime=start_time, endTime=end_time, meetingDate=meeting_date)
+        with db.connect() as conn:
+            row = conn.execute("SELECT MAX(meetingId) FROM Meeting WHERE uploaderEmail = %s", (uploader_email)).fetchone()
+            meetingID = row[0]
+        if len(attendees) > 0:
+            values = []
+            for attendee in attendees:
+                values.append((meetingID, attendee['email']))
+            with db.connect() as conn:
+                conn.execute("INSERT INTO Attendance (meetingId, userEmail) VALUES (%s, %s)", values)   
+    except Exception as e:
+        logger.exception(e)
+        return requests.post(send_email_http_url, headers=headers,
+                            json={ "recipient": uploader_email, "subject": "Processing of your audio file was unsuccessful!",
+                                    "text_body": "Unforunately, processing of your audio file for meeting:" + meeting_name + " was unsuccessful. Please try again." })
 
     storage_client = storage.Client.from_service_account_json('service_account.json')
 
@@ -123,10 +155,6 @@ def get_signed_url_for_recording_http(request):
     file = storage_client.bucket(bucket_name).blob(object_name)
 
     expires_at_ms = datetime.now() + timedelta(seconds=300)
-
-    if not signed_url_headers:
-        url = file.generate_signed_url(expires_at_ms, method="PUT", content_type=content_type, version='v4')
-    else:
-        url = file.generate_signed_url(expires_at_ms, method="PUT", content_type=content_type, version='v4', headers=signed_url_headers)
+    url = file.generate_signed_url(expires_at_ms, method="PUT", content_type=content_type, version='v4')
 
     return Response(status=201, response=url, headers=headers)

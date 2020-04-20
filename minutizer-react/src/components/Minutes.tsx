@@ -29,11 +29,18 @@ import DialogContentText from "@material-ui/core/DialogContentText";
 import DialogTitle from "@material-ui/core/DialogTitle";
 import Alert from "@material-ui/lab/Alert";
 import { connect } from "react-redux";
+import { KeyboardTimePicker, KeyboardDatePicker } from "@material-ui/pickers";
+import MomentUtils from "@date-io/moment";
+import AsyncSelect from "react-select/async";
 
 const mapStateToProps = ({ user }) => ({
   currentUser: user.currentUser,
 });
 
+const momentFns = new MomentUtils();
+const moment = require('moment');
+moment().format();
+const now = momentFns.date()
 export interface Data {
   meetingId: string;
   meetingName: string;
@@ -56,9 +63,9 @@ function createData(
 }
 
 const COMPLETED_TRANSCRIPTION_URL =
-  "https://us-central1-hacksbc-268409.cloudfunctions.net/transcription-status-check?completedProcessing=true";
+  "https://us-central1-hacksbc-268409.cloudfunctions.net/get_audio_processing_requests?completedProcessing=true";
 const IN_PROGRESS_TRANSCRIPTION_URL =
-  "https://us-central1-hacksbc-268409.cloudfunctions.net/transcription-status-check?inProgressProcessing=true";
+  "https://us-central1-hacksbc-268409.cloudfunctions.net/get_audio_processing_requests?inProgressProcessing=true";
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
   if (b[orderBy] < a[orderBy]) {
@@ -460,6 +467,12 @@ function MyTable(props: { completed: boolean; currentUser: any }) {
   const [selectedMeetingNames, setSelectedMeetingNames] = useState<string[]>(
     []
   );
+  const [userType, setUserType] = useState<string>("regular");
+  const [organizer, setOrganizer] = useState('');
+  const [meetingName, setMeetingName] = useState('');
+  const [meetingDate, setMeetingDate] = useState<any>(null);
+  const [meetingStartTime, setMeetingStartTime] = useState<any>(null);
+  const [meetingEndTime, setMeetingEndTime] = useState<any>(null);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(20);
   const [meetings, setMeetings] = useState<Data[]>([]);
@@ -469,27 +482,70 @@ function MyTable(props: { completed: boolean; currentUser: any }) {
   useEffect(() => {
     if (loading) {
       fetchMeetings().then((res) => {
-        setMeetings(meetings.concat(res));
+        if (page === 0) {
+          setMeetings(res);
+        } else {
+          setMeetings(meetings.concat(res));
+        }
         setLoading(false);
       });
     }
   }, [loading]);
 
+  useEffect(() => {
+    fetchCurrentUser().then((res) => {
+      setUserType(res.userType)
+    });
+  }, [props.completed]);
+
+  const getUserIdToken = async () => {
+    if (props.currentUser) {
+      try {
+        const token = await props.currentUser.getIdToken(false);
+        return token;
+      } catch (e) {
+        console.log(e);
+      }
+    }
+  };
+
+  const search = (event) => {
+    setLoading(true);
+  };
+
+  const reset = (event) => {
+    setMeetingDate(null);
+    setMeetingName('')
+    setMeetingStartTime(null)
+    setMeetingEndTime(null)
+    setOrganizer('')
+    setLoading(true);
+  };
+
+  const fetchCurrentUser = async () => {
+    const requestUrl = "https://us-central1-hacksbc-268409.cloudfunctions.net/get_users?me=true";
+    const authorizationHeaderValue: string =
+      "Bearer " + (await getUserIdToken());
+    const header: Headers = new Headers();
+    header.append("Authorization", authorizationHeaderValue);
+    let res = await fetch(requestUrl, {
+      method: "GET",
+      headers: header,
+    });
+    let buf = await res.json();
+    return buf;
+  }
+
   const fetchMeetings = async () => {
     const TRANSCRIPTION_STATUS_URL = props.completed
       ? COMPLETED_TRANSCRIPTION_URL
       : IN_PROGRESS_TRANSCRIPTION_URL;
-    const requestUrl = TRANSCRIPTION_STATUS_URL + `&page=${page}`;
-    const getUserIdToken = async () => {
-      if (props.currentUser) {
-        try {
-          const token = await props.currentUser.getIdToken(false);
-          return token;
-        } catch (e) {
-          console.log(e);
-        }
-      }
-    };
+    let requestUrl = TRANSCRIPTION_STATUS_URL + `&page=${page}`;
+    if (meetingName) { requestUrl += `&meetingName=${meetingName}` };
+    if (organizer) { requestUrl += `&organizer=${organizer}` };
+    if (meetingDate) { requestUrl += `&meetingDate=${momentFns.date(meetingDate).format("YYYY-MM-DD")}` };
+    if (meetingStartTime) { requestUrl += `&meetingStartTime=${momentFns.date(meetingStartTime).format("HH:mm:ss")}` };
+    if (meetingEndTime) { requestUrl += `&meetingEndTime=${momentFns.date(meetingEndTime).format("HH:mm:ss")}` };
     const authorizationHeaderValue: string =
       "Bearer " + (await getUserIdToken());
     const header: Headers = new Headers();
@@ -589,12 +645,87 @@ function MyTable(props: { completed: boolean; currentUser: any }) {
 
   const isSelected = (name: any) => selected.indexOf(name) !== -1;
 
-  const emptyRows =
-    rowsPerPage - Math.min(rowsPerPage, meetings.length - page * rowsPerPage);
+  const emptyRows = rowsPerPage - Math.min(rowsPerPage, meetings.length - page * rowsPerPage);
+
 
   return (
-    <div className="p-5 border-right border-secondary flex-fill text-center">
-      <div className="shadow-lg card-l">
+    <div className="p-5 border-right border-secondary flex-fill">
+      {userType === "admin" ? (<form id="searchMeetingForm" className="p-5 shadow-lg card-l mt-0">
+        <div className="d-flex justify-content-between mb-3 mt-2">
+          <div className="d-flex w-50 mr-5">
+            <label className="font-weight-bold w-50 mt-1">Meeting Name:</label>
+            <input
+              className="form-control"
+              type="text"
+              value={meetingName}
+              onChange={event => setMeetingName(event.target.value)}
+            />
+          </div>
+          <div className="d-flex w-50">
+            <label className="font-weight-bold w-50 mt-1">
+              Meeting Organizer:
+            </label>
+            <input
+              className="form-control"
+              type="text"
+              value={organizer}
+              onChange={event => setOrganizer(event.target.value)}
+            />
+          </div>
+        </div>
+        <div className="d-flex justify-content-between mb-3 mt-3">
+          <div className="d-flex w-33 mr-5">
+            <label className="font-weight-bold w-75 mt-1">Meeting Date:</label>
+            <KeyboardDatePicker
+              disableToolbar
+              variant="inline"
+              format="DD/MM/YYYY"
+              placeholder={now.format("L")}
+              value={meetingDate}
+              onChange={val => setMeetingDate(val)}
+            />
+          </div>
+          <div className="d-flex w-33 mr-5">
+            <label className="font-weight-bold w-75 mt-1">Start Time:</label>
+            <KeyboardTimePicker
+              ampm={false}
+              format="HH:mm"
+              variant="inline"
+              placeholder={now.format("LT")}
+              value={meetingStartTime}
+              onChange={val => setMeetingStartTime(val)}
+            />
+          </div>
+          <div className="d-flex w-33">
+            <label className="font-weight-bold w-75 mt-1">End Time:</label>
+            <KeyboardTimePicker
+              ampm={false}
+              format="HH:mm"
+              variant="inline"
+              placeholder={now.format("LT")}
+              value={meetingEndTime}
+              onChange={val => setMeetingEndTime(val)}
+            />
+          </div>
+        </div>
+        <Button
+          className="form-group mr-5"
+          variant="contained"
+          color="default"
+          onClick={search}
+        >
+          Submit
+        </Button>
+        <Button
+          className="form-group"
+          variant="contained"
+          color="default"
+          onClick={reset}
+        >
+          Reset
+        </Button>
+      </form>) : ''}
+      <div className="shadow-lg card-l text-center">
         <Paper
           className={classes.paper}
           style={{ borderRadius: "25px", padding: "15px" }}
