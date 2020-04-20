@@ -29,6 +29,7 @@ import DialogContentText from "@material-ui/core/DialogContentText";
 import DialogTitle from "@material-ui/core/DialogTitle";
 import Alert from "@material-ui/lab/Alert";
 import { connect } from "react-redux";
+import Loader from 'react-loader-spinner';
 
 const mapStateToProps = ({ user }) => ({
   currentUser: user.currentUser,
@@ -356,7 +357,7 @@ const EnhancedTableToolbar = (props: EnhancedTableToolbarProps) => {
           >
             <DialogTitle id="alert-dialog-title">{popUpTitle}</DialogTitle>
             <DialogContent>
-              <CircularProgress className="d-flex justify-content-center" />
+            <Loader className="d-flex justify-content-center" type="TailSpin" color="#00BFFF" height={80} width={80} />
               <DialogContentText id="alert-dialog-description">
                 {dialogText}
               </DialogContentText>
@@ -591,6 +592,10 @@ function MyTable(props: { completed: boolean; currentUser: any }) {
   return (
     <div className="p-5 border-right border-secondary flex-fill text-center">
       <div className="shadow-lg card-l">
+      {meetings.length===0 ? (
+              <Loader className="d-flex justify-content-center" type="TailSpin" color="#00BFFF" height={80} width={80} 
+              style={{ padding: "200px" }}/>
+            ) : (
         <Paper
           className={classes.paper}
           style={{ borderRadius: "25px", padding: "15px" }}
@@ -601,9 +606,6 @@ function MyTable(props: { completed: boolean; currentUser: any }) {
             completed={props.completed}
           />
           <TableContainer>
-            {loading ? (
-              <CircularProgress />
-            ) : (
               <Table
                 className={classes.table}
                 aria-labelledby="tableTitle"
@@ -679,7 +681,6 @@ function MyTable(props: { completed: boolean; currentUser: any }) {
                   )}
                 </TableBody>
               </Table>
-            )}
           </TableContainer>
           <TablePagination
             rowsPerPageOptions={[20]}
@@ -691,6 +692,7 @@ function MyTable(props: { completed: boolean; currentUser: any }) {
             onChangeRowsPerPage={handleChangeRowsPerPage}
           />
         </Paper>
+        )}
       </div>
     </div>
   );
