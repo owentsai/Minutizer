@@ -144,9 +144,10 @@ def get_signed_url_for_recording_http(request):
                 conn.execute("INSERT INTO Attendance (meetingId, userEmail) VALUES (%s, %s)", values)   
     except Exception as e:
         logger.exception(e)
-        return requests.post(send_email_http_url, headers=headers,
+        response = requests.post(send_email_http_url, headers=headers,
                             json={ "recipient": uploader_email, "subject": "Processing of your audio file was unsuccessful!",
                                     "text_body": "Unforunately, processing of your audio file for meeting:" + meeting_name + " was unsuccessful. Please try again." })
+        return response
 
     storage_client = storage.Client.from_service_account_json('service_account.json')
 

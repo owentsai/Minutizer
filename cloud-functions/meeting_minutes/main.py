@@ -108,7 +108,8 @@ def send_meeting_minutes_http(request):
     html_body = meeting_info_html + action_items_html + "<div>Your meeting transcript is attached.</div>"
 
     send_email_http_url = os.environ.get('SEND_EMAIL_HTTP_URL')
-    return requests.post(send_email_http_url,
+    response = requests.post(send_email_http_url,
                             data={ "html_body" :html_body, "recipient": user_email, "cc": attendees, "subject": "Your Meeting Minutes are ready!",
                                     "attachment": { "bucket": action_items_bucket,"file_path": 'transcripts/{}.txt'.format(meeting_id) } })
+    return response
         

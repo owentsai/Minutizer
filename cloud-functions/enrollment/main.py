@@ -39,9 +39,10 @@ def enroll_voice(event, context):
 			conn.execute("INSERT INTO VoiceEnrollment (userEmail, timestamp, voiceEnrollmentStatus)" " VALUES (%s, %s, %s)", (userID, timestamp, 'INPROGRESS'))
 	except Exception as e:
 		logger.exception(e)
-		return requests.post(send_email_http_url, headers=headers,
+		response = requests.post(send_email_http_url, headers=headers,
                             json={ "recipient": userID, "subject": "Your voice enrollment was unsuccessful!",
                                     "text_body": "Unforunately, your voice enrollment was unsuccessful. Please try again." })
+		return response
 
 	
 	url = "https://proxy.api.deepaffects.com/audio/generic/api/v2/sync/diarization/enroll"
@@ -70,9 +71,10 @@ def enroll_voice(event, context):
 		enc = "MP4"
 	else:
 		logger.exception("Wrong FileType: {}".format(encoding))
-		return requests.post(send_email_http_url, headers=headers,
+		response = requests.post(send_email_http_url, headers=headers,
                             json={ "recipient": userID, "subject": "Your voice enrollment was unsuccessful!",
                                     "text_body": "Unforunately, your voice enrollment was unsuccessful. Please try again." })
+		return response
 
 	payload["encoding"] = enc
 	deepaffectsID = path_to_file.split('/')[-1].split('@')[0]
@@ -88,22 +90,25 @@ def enroll_voice(event, context):
 				conn.execute("UPDATE VoiceEnrollment SET voiceEnrollmentStatus='FAILURE', errorString=%s WHERE userEmail=%s", (error, userID))
 		except Exception as e:
 			logger.exception(e)
-		return requests.post(send_email_http_url, headers=headers,
+		response = requests.post(send_email_http_url, headers=headers,
                             json={ "recipient": userID, "subject": "Your voice enrollment was unsuccessful!",
                                     "text_body": "Unforunately, your voice enrollment was unsuccessful. Please try again." })
+		return response
 	else:
 		try:
 			with db.connect() as conn:
 				conn.execute("UPDATE VoiceEnrollment SET voiceEnrollmentStatus='SUCCESS' WHERE userEmail=%s", (userID))
 		except Exception as e:
 			logger.exception(e)
-			return requests.post(send_email_http_url, headers=headers,
+			response = requests.post(send_email_http_url, headers=headers,
                             json={ "recipient": userID, "subject": "Your voice enrollment was unsuccessful!",
                                     "text_body": "Unforunately, your voice enrollment was unsuccessful. Please try again." })
+			return response
 
-	return requests.post(send_email_http_url, headers=headers,
+	response = requests.post(send_email_http_url, headers=headers,
                             json={ "recipient": userID, "subject": "Your voice enrollment is complete!",
                                     "text_body": "Congratulations! You've successfully completed your voice enrollment. You may now begin to receive meeting minutes from meetings in which your voice has been identified." })
+	return response
 
 
 def query_enrollments(request):
