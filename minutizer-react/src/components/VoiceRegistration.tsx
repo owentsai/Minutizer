@@ -7,6 +7,7 @@ import Button from "@material-ui/core/Button";
 import Alert from "@material-ui/lab/Alert";
 import { connect } from "react-redux";
 import MicRecorder from "mic-recorder-to-mp3";
+import CircularProgress from '@material-ui/core/CircularProgress';
 
 interface VoiceRegisterTabStates {
   recorder: any;
@@ -31,14 +32,18 @@ class VoiceRegisterTab extends Component<
       isRecording: false,
       countdownTimer: 3,
       timer: 0,
-      isUserEnrolled: "",
+      isUserEnrolled: "LOADING",
     };
     this.registerVoice = this.registerVoice.bind(this);
     this.getUserIdToken = this.getUserIdToken.bind(this);
   }
 
   componentDidMount() {
-    this.getEnrollmentStatus();
+    let enrolmentStatus: Promise<any> = this.getEnrollmentStatus().then((value) => {
+      this.setState({
+        isUserEnrolled: value,
+      });
+    });
     interval = setInterval(() => {
       let currTime: number = this.state.timer;
       let currCountdown: number = this.state.countdownTimer;
@@ -66,12 +71,22 @@ class VoiceRegisterTab extends Component<
           countdownTimer: 3,
         });
       }
+      if (this.state.isUserEnrolled == "INPROGRESS") {
+        enrolmentStatus = this.getEnrollmentStatus().then((value) => {
+          if (value == "SUCCESS" || value == "FAILURE") {
+            this.setState({
+              isUserEnrolled: value,
+            });
+          }
+        })
+      }
     }, 1000);
+    
   }
 
-  componentWillUnmount() {
-    clearInterval(interval);
-  }
+  // componentWillUnmount() {
+  //   clearInterval(interval);
+  // }
 
   async getUserIdToken() {
     if (this.props.currentUser) {
@@ -83,7 +98,7 @@ class VoiceRegisterTab extends Component<
     }
   }
 
-  async getEnrollmentStatus() {
+  async getEnrollmentStatus(): Promise<string> {
     console.log("before: " + this.state.isUserEnrolled);
     const voiceEnrollmentStatusURL: string =
       "https://us-central1-hacksbc-268409.cloudfunctions.net/get_enrollment_status";
@@ -98,8 +113,8 @@ class VoiceRegisterTab extends Component<
     const statusJSON = await result.json();
     console.log(statusJSON);
     const enrollmentStatus: string = statusJSON.status;
-    this.setState({ isUserEnrolled: enrollmentStatus });
     console.log("after: " + this.state.isUserEnrolled);
+    return enrollmentStatus;
   }
 
   startButtonHandler = () => {
@@ -293,9 +308,13 @@ class VoiceRegisterTab extends Component<
       );
     } else if (this.state.isUserEnrolled === "INPROGRESS"){
       enrolStatus = (
-        <Alert variant="outlined" severity="info">
-          We are currently processing your enrolment.
-        </Alert>
+          <Alert variant="outlined" severity="info">
+            We are currently processing your enrolment.
+          </Alert>
+      );
+    } else {
+      enrolStatus = (
+        <CircularProgress /> 
       );
     }
 
@@ -303,10 +322,7 @@ class VoiceRegisterTab extends Component<
       <div className="p-3 shadow-lg card-m">
         <div className="d-flex flex-column align-items-center">
           <div className="d-flex flex-row align-self-center justify-content-center">
-            <h4 className="mr-2 pt-2">Your Voice Enrolment Status: </h4>
-            <div>
               {enrolStatus}
-            </div>
           </div>
           <ReactMic
             record={this.state.isRecording}
@@ -317,9 +333,7 @@ class VoiceRegisterTab extends Component<
             mimeType="audio/webm"
           />
           <div className="pb-1">
-            {/* <div className="p-1" style={{border: "2px solid black", borderRadius: "50%" }}> */}
             {currButton}
-            {/* </div> */}
           </div>
         </div>
         <div className="ml-5 mr-5">
