@@ -44,6 +44,7 @@ class VoiceRegisterTab extends Component<
         isUserEnrolled: value,
       });
     });
+    var statusUpdateCounter: number = 0;
     interval = setInterval(() => {
       let currTime: number = this.state.timer;
       let currCountdown: number = this.state.countdownTimer;
@@ -72,21 +73,19 @@ class VoiceRegisterTab extends Component<
         });
       }
       if (this.state.isUserEnrolled == "INPROGRESS") {
+        statusUpdateCounter++;
         enrolmentStatus = this.getEnrollmentStatus().then((value) => {
-          if (value == "SUCCESS" || value == "FAILURE") {
+          if ((value == "SUCCESS" || value == "FAILURE") && statusUpdateCounter > 6) {
             this.setState({
               isUserEnrolled: value,
             });
+            statusUpdateCounter = 0;
           }
         })
       }
     }, 1000);
     
   }
-
-  // componentWillUnmount() {
-  //   clearInterval(interval);
-  // }
 
   async getUserIdToken() {
     if (this.props.currentUser) {
@@ -225,6 +224,8 @@ class VoiceRegisterTab extends Component<
     var enrolButtonColor =
       this.state.timer < 25 ? "bg-primary text-white" : "bg-warning text-white";
     var enrolStatus;
+    var inProgressSpin;
+
     if (!this.state.hasStarted && !this.state.isRecording) {
       if (this.state.isUserEnrolled == "INPROGRESS") {
         currButton = (
@@ -307,6 +308,11 @@ class VoiceRegisterTab extends Component<
         </Alert>
       );
     } else if (this.state.isUserEnrolled === "INPROGRESS"){
+      inProgressSpin = (
+        <div className="pr-3">
+          <CircularProgress color="primary"/> 
+        </div>
+      );
       enrolStatus = (
           <Alert variant="outlined" severity="info">
             We are currently processing your enrolment.
@@ -314,14 +320,15 @@ class VoiceRegisterTab extends Component<
       );
     } else {
       enrolStatus = (
-        <CircularProgress /> 
+        <CircularProgress color="secondary"/> 
       );
     }
 
     return (
       <div className="p-3 shadow-lg card-m">
         <div className="d-flex flex-column align-items-center">
-          <div className="d-flex flex-row align-self-center justify-content-center">
+          <div className="d-flex flex-row">
+              {inProgressSpin}
               {enrolStatus}
           </div>
           <ReactMic
