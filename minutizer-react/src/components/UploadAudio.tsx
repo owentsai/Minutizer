@@ -14,7 +14,7 @@ import ScheduleIcon from "@material-ui/icons/Schedule";
 toast.configure();
 
 const momentFns = new MomentUtils();
-const moment = require('moment');
+const moment = require("moment");
 moment().format();
 
 interface inputProps {
@@ -39,10 +39,12 @@ class UploadTab extends React.Component<{ currentUser }, inputProps> {
       meetingDate: null,
       attendees: [],
       audioFile: null,
-      placeholder: momentFns.date()
+      placeholder: momentFns.date(),
     };
-    this.setState({startTime: this.state.placeholder,
-                          endTime: this.state.placeholder})
+    this.setState({
+      startTime: this.state.placeholder,
+      endTime: this.state.placeholder,
+    });
   }
 
   handleChangeMeetingName = (event) => {
@@ -58,39 +60,40 @@ class UploadTab extends React.Component<{ currentUser }, inputProps> {
   };
 
   handleChangeStartTime = (time) => {
-    if (!moment(time).isValid()){
+    if (!moment(time).isValid()) {
       this.setState({ startTime: time });
       return;
     }
     let eTimeMin;
-    if (this.state.endTime == null){
-      eTimeMin = moment().hour()*60 + moment().minute();
-    }else{
-      eTimeMin = this.state.endTime.hour()*60 + this.state.endTime.minute();
+    if (this.state.endTime == null) {
+      eTimeMin = moment().hour() * 60 + moment().minute();
+    } else {
+      eTimeMin = this.state.endTime.hour() * 60 + this.state.endTime.minute();
     }
-    let sTimeMin = time.hour()*60 + time.minute();
-    if(sTimeMin <= eTimeMin){
+    let sTimeMin = time.hour() * 60 + time.minute();
+    if (sTimeMin <= eTimeMin) {
       this.setState({ startTime: time });
-    }else {
+    } else {
       alert("Invalid time selected, start time must be before end time.");
     }
   };
 
   handleChangeEndTime = (time) => {
-    if (!moment(time).isValid()){
+    if (!moment(time).isValid()) {
       this.setState({ endTime: time });
       return;
     }
     let sTimeMin;
-    if (this.state.startTime == null){
-      sTimeMin = moment().hour()*60 + moment().minute();
-    }else{
-      sTimeMin = this.state.startTime.hour()*60 + this.state.startTime.minute();
+    if (this.state.startTime == null) {
+      sTimeMin = moment().hour() * 60 + moment().minute();
+    } else {
+      sTimeMin =
+        this.state.startTime.hour() * 60 + this.state.startTime.minute();
     }
-    let eTimeMin = time.hour()*60 + time.minute();
-    if(sTimeMin <= eTimeMin){
+    let eTimeMin = time.hour() * 60 + time.minute();
+    if (sTimeMin <= eTimeMin) {
       this.setState({ endTime: time });
-    }else {
+    } else {
       alert("Invalid time selected, start time must be before end time.");
     }
   };
@@ -131,8 +134,7 @@ class UploadTab extends React.Component<{ currentUser }, inputProps> {
   loadAttendees = async (inputValue) => {
     const token = await this.getUserIdToken();
     return new Promise(function (fulfill, reject) {
-      let url =
-        "https://us-central1-hacksbc-268409.cloudfunctions.net/get_users";
+      let url: any = process.env.REACT_APP_ATTENDEES_URL;
       if (inputValue && inputValue !== "") {
         url = url + "?search=" + inputValue;
       }
@@ -152,23 +154,18 @@ class UploadTab extends React.Component<{ currentUser }, inputProps> {
   };
 
   handleSubmitForm = (event) => {
-    let parts: string[]
-    try{
-       parts = this.state.audioFile.name.split(".");
-    }catch (e) {
-      return toast.error(
-          <div>
-            No file selected!
-          </div>,
-          {
-            position: "top-center",
-            autoClose: 5000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-          }
-      );
+    let parts: string[];
+    try {
+      parts = this.state.audioFile.name.split(".");
+    } catch (e) {
+      return toast.error(<div>No file selected!</div>, {
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
     }
 
     let extension: string = parts[parts.length - 1].toLowerCase();
@@ -201,9 +198,15 @@ class UploadTab extends React.Component<{ currentUser }, inputProps> {
       contentType: this.state.audioFile.type,
       organizer: this.state.organizer,
       meetingName: this.state.meetingName,
-      startTime: this.state.startTime && momentFns.date(this.state.startTime).format("HH:mm:ss"),
-      endTime: this.state.endTime && momentFns.date(this.state.endTime).format("HH:mm:ss"),
-      meetingDate: this.state.meetingDate && momentFns.date(this.state.meetingDate).format("YYYY-MM-DD"),
+      startTime:
+        this.state.startTime &&
+        momentFns.date(this.state.startTime).format("HH:mm:ss"),
+      endTime:
+        this.state.endTime &&
+        momentFns.date(this.state.endTime).format("HH:mm:ss"),
+      meetingDate:
+        this.state.meetingDate &&
+        momentFns.date(this.state.meetingDate).format("YYYY-MM-DD"),
     };
     if (this.state.attendees && this.state.attendees.length > 0) {
       metadata["attendees"] = this.state.attendees;
@@ -262,8 +265,7 @@ class UploadTab extends React.Component<{ currentUser }, inputProps> {
   async getSignedURL(metadata: any) {
     const token = await this.getUserIdToken();
     return new Promise(function (fulfill, reject) {
-      const URL =
-        "https://us-central1-hacksbc-268409.cloudfunctions.net/get_signed_url_for_recording";
+      const URL: any = process.env.REACT_APP_UPLOAD_AUDIO_URL;
       const request = new XMLHttpRequest();
       const authorizationValue: string = "Bearer " + token;
       request.open("POST", URL, true);
