@@ -121,7 +121,7 @@ def transcription_webhook(request):
 		with db.connect() as conn:
 			meetingID = conn.execute('SELECT meetingId FROM AudioProcessingRequest WHERE requestId=%s', (request_id)).fetchone()[0]
 			
-			row = conn.execute("SELECT meetingName, uploaderEmail FROM Meeting WHERE meetingId={}".format(meetingID)) 
+			row = conn.execute("SELECT meetingName, uploaderEmail FROM Meeting WHERE meetingId={}".format(meetingID)).fetchone() 
 			meeting_name = row[0]
 			uploader_email = row[1]
 			
