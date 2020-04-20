@@ -101,10 +101,10 @@ def get_audio_processing_requests_http(request):
                     query_conditions += 'AND meetingDate=%s'
                     query_parameters.append(request_args['meetingDate'])
                 if request_args.get('startTime'):
-                    query_conditions += 'AND startTime>=%s'
+                    query_conditions += 'AND startTime<=%s'
                     query_parameters.append(request_args['startTime'])
                 if request_args.get('endTime'):
-                    query_conditions += 'AND endTime<=%s'
+                    query_conditions += 'AND endTime>=%s'
                     query_parameters.append(request_args['endTime'])
                 # case 1: only completed query param is passed in as true
                 if completed_bool and not inProgress_bool:

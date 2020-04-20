@@ -544,8 +544,8 @@ function MyTable(props: { completed: boolean; currentUser: any }) {
     if (meetingName) { requestUrl += `&meetingName=${meetingName}` };
     if (organizer) { requestUrl += `&organizer=${organizer}` };
     if (meetingDate) { requestUrl += `&meetingDate=${momentFns.date(meetingDate).format("YYYY-MM-DD")}` };
-    if (meetingStartTime) { requestUrl += `&meetingStartTime=${momentFns.date(meetingStartTime).format("HH:mm:ss")}` };
-    if (meetingEndTime) { requestUrl += `&meetingEndTime=${momentFns.date(meetingEndTime).format("HH:mm:ss")}` };
+    if (meetingStartTime) { requestUrl += `&startTime=${momentFns.date(meetingStartTime).format("HH:mm:ss")}` };
+    if (meetingEndTime) { requestUrl += `&endTime=${momentFns.date(meetingEndTime).format("HH:mm:ss")}` };
     const authorizationHeaderValue: string =
       "Bearer " + (await getUserIdToken());
     const header: Headers = new Headers();

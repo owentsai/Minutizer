@@ -199,7 +199,7 @@ class UploadTab extends React.Component<{ currentUser }, inputProps> {
     }
     const metadata = {
       contentType: this.state.audioFile.type,
-      organizerUserName: this.state.organizer,
+      organizer: this.state.organizer,
       meetingName: this.state.meetingName,
       startTime: this.state.startTime && momentFns.date(this.state.startTime).format("HH:mm:ss"),
       endTime: this.state.endTime && momentFns.date(this.state.endTime).format("HH:mm:ss"),
