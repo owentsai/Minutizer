@@ -1,6 +1,3 @@
-sqlalchemy
 flask
-PyMySQL
 google-cloud-storage
 mailjet-rest
-firebase-admin

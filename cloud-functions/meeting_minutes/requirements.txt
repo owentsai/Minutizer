@@ -1,0 +1,6 @@
+flask
+google-cloud-storage
+firebase-admin
+PyMySQL
+sqlalchemy
+requests

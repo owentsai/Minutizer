@@ -7,6 +7,7 @@ import Button from "@material-ui/core/Button";
 import Alert from "@material-ui/lab/Alert";
 import { connect } from "react-redux";
 import MicRecorder from "mic-recorder-to-mp3";
+import CircularProgress from "@material-ui/core/CircularProgress";
 
 interface VoiceRegisterTabStates {
   recorder: any;
@@ -14,8 +15,10 @@ interface VoiceRegisterTabStates {
   timer: number;
   hasStarted: boolean;
   countdownTimer: number;
-  isUserEnrolled: boolean;
+  isUserEnrolled: string;
 }
+
+var interval;
 
 class VoiceRegisterTab extends Component<
   { currentUser },
@@ -29,17 +32,24 @@ class VoiceRegisterTab extends Component<
       isRecording: false,
       countdownTimer: 3,
       timer: 0,
-      isUserEnrolled: false,
+      isUserEnrolled: "LOADING",
     };
     this.registerVoice = this.registerVoice.bind(this);
     this.getUserIdToken = this.getUserIdToken.bind(this);
   }
 
   componentDidMount() {
-    setInterval(() => {
+    let enrolmentStatus: Promise<any> = this.getEnrollmentStatus().then(
+      (value) => {
+        this.setState({
+          isUserEnrolled: value,
+        });
+      }
+    );
+    var statusUpdateCounter: number = 0;
+    interval = setInterval(() => {
       let currTime: number = this.state.timer;
       let currCountdown: number = this.state.countdownTimer;
-
       if (this.state.hasStarted || this.state.isRecording) {
         if (this.state.hasStarted) {
           if (this.state.countdownTimer === 0) {
@@ -64,8 +74,21 @@ class VoiceRegisterTab extends Component<
           countdownTimer: 3,
         });
       }
+      if (this.state.isUserEnrolled == "INPROGRESS") {
+        statusUpdateCounter++;
+        enrolmentStatus = this.getEnrollmentStatus().then((value) => {
+          if (
+            (value == "SUCCESS" || value == "FAILURE") &&
+            statusUpdateCounter > 6
+          ) {
+            this.setState({
+              isUserEnrolled: value,
+            });
+            statusUpdateCounter = 0;
+          }
+        });
+      }
     }, 1000);
-    this.getEnrollmentStatus();
   }
 
   async getUserIdToken() {
@@ -78,10 +101,10 @@ class VoiceRegisterTab extends Component<
     }
   }
 
-  async getEnrollmentStatus() {
+  async getEnrollmentStatus(): Promise<string> {
     console.log("before: " + this.state.isUserEnrolled);
-    const voiceEnrollmentStatusURL: string =
-      "https://us-central1-hacksbc-268409.cloudfunctions.net/enrolment_status_check";
+    const voiceEnrollmentStatusURL: any =
+      process.env.REACT_APP_VOICE_ENROLLMENT_STATUS_URL;
     const authorizationHeaderValue: string =
       "Bearer " + (await this.getUserIdToken());
     const header: Headers = new Headers();
@@ -92,9 +115,9 @@ class VoiceRegisterTab extends Component<
     });
     const statusJSON = await result.json();
     console.log(statusJSON);
-    const enrollmentStatus: boolean = statusJSON.enrolled;
-    this.setState({ isUserEnrolled: enrollmentStatus });
+    const enrollmentStatus: string = statusJSON.status;
     console.log("after: " + this.state.isUserEnrolled);
+    return enrollmentStatus;
   }
 
   startButtonHandler = () => {
@@ -142,7 +165,7 @@ class VoiceRegisterTab extends Component<
         authorizationHeaderValue
       );
       await this.sendAudioFile(signedURL, recordedFile);
-      this.setState({ isUserEnrolled: true });
+      this.setState({ isUserEnrolled: "INPROGRESS" });
     } catch (err) {
       console.error("Catch error when uploading voice sample: /n" + err);
     }
@@ -151,8 +174,7 @@ class VoiceRegisterTab extends Component<
   //HTTP request using XMLHTTP
   getSignedURL(metadata: any, authHeaderValue: string) {
     return new Promise(function (fulfill, reject) {
-      const URL =
-        "https://us-central1-hacksbc-268409.cloudfunctions.net/enrol_voice_begin";
+      const URL: any = process.env.REACT_APP_UPLOAD_VOICE_ENROLLMENT_URL;
       const request = new XMLHttpRequest();
       request.open("POST", URL, true);
       request.setRequestHeader("Content-Type", "application/json");
@@ -205,18 +227,35 @@ class VoiceRegisterTab extends Component<
     var currButton;
     var enrolButtonColor =
       this.state.timer < 25 ? "bg-primary text-white" : "bg-warning text-white";
+    var enrolStatus;
+    var inProgressSpin;
+
     if (!this.state.hasStarted && !this.state.isRecording) {
-      currButton = (
-        <Button
-          style={{ width: "200px", height: "35px" }}
-          variant="contained"
-          color="secondary"
-          startIcon={<MicIcon />}
-          onClick={this.startButtonHandler}
-        >
-          START
-        </Button>
-      );
+      if (this.state.isUserEnrolled == "INPROGRESS") {
+        currButton = (
+          <Button
+            style={{ width: "200px", height: "35px" }}
+            variant="contained"
+            color="secondary"
+            disabled
+            startIcon={<MicIcon />}
+          >
+            START
+          </Button>
+        );
+      } else {
+        currButton = (
+          <Button
+            style={{ width: "200px", height: "35px" }}
+            variant="contained"
+            color="secondary"
+            startIcon={<MicIcon />}
+            onClick={this.startButtonHandler}
+          >
+            START
+          </Button>
+        );
+      }
     } else if (this.state.hasStarted) {
       currButton = (
         <Button
@@ -229,35 +268,71 @@ class VoiceRegisterTab extends Component<
         </Button>
       );
     } else {
-      currButton = (
-        <Button
-          style={{ width: "200px", height: "35px" }}
-          variant="contained"
-          className={enrolButtonColor}
-          startIcon={<StopIcon />}
-          onClick={this.stopRecording}
-        >
-          ENROL {("0" + this.state.timer).slice(-2)}S
-        </Button>
+      if (this.state.timer < 15) {
+        currButton = (
+          <Button
+            style={{ width: "200px", height: "35px" }}
+            variant="contained"
+            className={enrolButtonColor}
+            startIcon={<StopIcon />}
+          >
+            ENROL {("0" + this.state.timer).slice(-2)}S
+          </Button>
+        );
+      } else {
+        currButton = (
+          <Button
+            style={{ width: "200px", height: "35px" }}
+            variant="contained"
+            className={enrolButtonColor}
+            startIcon={<StopIcon />}
+            onClick={this.stopRecording}
+          >
+            ENROL {("0" + this.state.timer).slice(-2)}S
+          </Button>
+        );
+      }
+    }
+
+    if (this.state.isUserEnrolled === "NODATA") {
+      enrolStatus = (
+        <Alert variant="outlined" severity="warning">
+          You have not been enrolled.
+        </Alert>
       );
+    } else if (this.state.isUserEnrolled === "FAILURE") {
+      enrolStatus = (
+        <Alert variant="outlined" severity="error">
+          Your enrolment has failed. Please try again!
+        </Alert>
+      );
+    } else if (this.state.isUserEnrolled === "SUCCESS") {
+      enrolStatus = (
+        <Alert variant="outlined" severity="success">
+          You have successfully enrolled!
+        </Alert>
+      );
+    } else if (this.state.isUserEnrolled === "INPROGRESS") {
+      inProgressSpin = (
+        <div className="pr-3">
+          <CircularProgress color="primary" />
+        </div>
+      );
+      enrolStatus = (
+        <Alert variant="outlined" severity="info">
+          We are currently processing your enrolment.
+        </Alert>
+      );
+    } else {
+      enrolStatus = <CircularProgress color="secondary" />;
     }
 
     return (
       <div className="p-3 shadow-lg card-m">
         <div className="d-flex flex-column align-items-center">
-          <div className="d-flex flex-row align-self-center justify-content-center">
-            <h4 className="mr-2 pt-2">Your Voice Enrolment Status: </h4>
-            <div>
-              {this.state.isUserEnrolled ? (
-                <Alert variant="outlined" severity="success">
-                  You have successfully enrolled your voice
-                </Alert>
-              ) : (
-                <Alert variant="outlined" severity="warning">
-                  You have not enrolled your voice
-                </Alert>
-              )}
-            </div>
+          <div className="d-flex flex-row">
+            {inProgressSpin}
+            {enrolStatus}
           </div>
           <ReactMic
             record={this.state.isRecording}
@@ -267,11 +342,7 @@ class VoiceRegisterTab extends Component<
             backgroundColor="#262626"
             mimeType="audio/webm"
           />
-          <div className="pb-1">
-            {/* <div className="p-1" style={{border: "2px solid black", borderRadius: "50%" }}> */}
-            {currButton}
-            {/* </div> */}
-          </div>
+          <div className="pb-1">{currButton}</div>
         </div>
         <div className="ml-5 mr-5">
           <h3 className="font-weight-bold pb-3">INSTRUCTIONS: </h3>

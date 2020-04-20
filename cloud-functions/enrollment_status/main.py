@@ -2,6 +2,7 @@ import firebase_admin
 from firebase_admin import auth
 from flask import escape, Response
 import json
+import datetime
 import sqlalchemy
 import os
 import sys
@@ -20,7 +21,7 @@ db = sqlalchemy.create_engine(
 default_app = firebase_admin.initialize_app()
 logger = logging.getLogger()
 
-def enrolment_status_check_http(request):
+def get_enrollment_status_http(request):
     headers = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': '*'}
 
     if request.method == 'OPTIONS':
@@ -50,13 +51,16 @@ def enrolment_status_check_http(request):
         logger.exception(e)
         return Response(response="Error: Invalid Access.", status=401, headers=headers)
     
+    # TODO: test timedelta calculation
     try:
         with db.connect() as conn:
-            row = conn.execute("SELECT * FROM VoiceEnrollment WHERE userEmail = %s AND voiceEnrollmentStatus IS TRUE", user_email).fetchone()
-        if not row:
-            return Response(status=200, response=json.dumps({ "enrolled": False }), headers=headers)
-        else:
-            return Response(status=200, response=json.dumps({ "enrolled": True }), headers=headers)
+            enrollment = conn.execute("SELECT timestamp, status FROM VoiceEnrollment WHERE userEmail = %s AND timestamp = (SELECT MAX(timestamp) FROM VoiceEnrollment WHERE userEmail = %s)", user_email).fetchone()
+        if not enrollment:
+            return Response(status=200, response=json.dumps({ "status": "Not Enrolled" }), headers=headers)
+        elif enrollment[1]:
+            return Response(status=200, response=json.dumps({ "status": enrollment[1] }), headers=headers)
+        elif (datetime.datetime.now() - datetime.datetime.strptime(enrollment[0])) > datetime.timedelta(1):
+            return Response(status=200, response=json.dumps({ "status": "Enrolled Unsuccessful" }), headers=headers)
     except Exception as e:
         logger.exception(e)
         return Response(status=500, response="Error: Internal Server Error.", headers=headers)
